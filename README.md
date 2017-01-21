@@ -44,9 +44,18 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 21 January 2017, Lunar Logo supports 50 procedures (you can find the list at the end of `lunar.py`). The language is, however, not very robust. Here's what happens if you misspell a procedure name:
+As of 21 January 2017, Lunar Logo supports 55 procedures (you can find the list at the end of `lunar.py`), including flow control. There are no functions yet; calling `return` will just end the program. For now, you can store a block of code in a variable (code is data in Logo!) and run it repeatedly:
 
-	$ ./lunar.py sqr add mul 3 3 mul 4 4
-	25
+	make greeting do
+		print results parse [Hello, :you !]
+	end
 
-You don't even get an indication of what's wrong. But you *might* get a crash, or very strange output. So this needs to be fixed before going forward.
+	make you stranger
+	run :greeting
+	type [What's your name?]
+	make you readword
+	run :greeting
+
+For that matter, calling `break` outside of a loop will also end the program, since there will be nothing to stop the condition from propagating; only `continue` will work correctly anywhere.
+
+Thanks for reading. More to come.

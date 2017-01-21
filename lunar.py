@@ -10,6 +10,12 @@ class Scope:
 	def __init__(self, parent = None):
 		self.names = {}
 		self.parent = parent
+		
+		self.test = False
+		
+		self.continuing = False
+		self.breaking = False
+		self.returning = False
 	
 	def __getitem__(self, key):
 		#key = key.lower()
@@ -112,12 +118,34 @@ def scan_block(code, cursor):
 				"Unexpected end of input in block.")
 	return block, cursor + 1
 
-
+# Essential procedures.
 def run(code, scope):
 	cursor = 0
 	while cursor < len(code):
 		value, cursor = eval_next(code, cursor, scope)
-	return value
+		if scope.continuing:
+			scope.continuing = False
+			return None
+		elif scope.breaking:
+			return None
+		elif scope.returning:
+			return value
+		elif value != None:
+			raise ValueError(
+				"You don't say what to do with: "
+					+ str(value))
+
+def results(code, scope):
+	values = []
+	cursor = 0
+	while cursor < len(code):
+		val, cursor = eval_next(code, cursor, scope)
+		if scope.returning:
+			return [val]
+		elif scope.breaking or scope.continuing:
+			break
+		values.append(val)
+	return values
 
 def load(filename, scope):
 	code = []
@@ -126,7 +154,18 @@ def load(filename, scope):
 			code.extend(parse(i.split()))
 	return run(code, scope)
 
+# Flow control
+def do_continue(scope):
+	scope.continuing = True
 
+def do_break(scope):
+	scope.breaking = True
+
+def do_return(value, scope):
+	scope.returning = True
+	return value
+
+# Printing out.
 def do_print(value):
 	if type(value) == list:
 		return print(" ".join(value))
@@ -139,10 +178,9 @@ def do_type(value):
 	else:
 		return print(value, end='')
 
-
+# Creating variables.
 def make(varname, value, scope):
 	scope[varname] = value
-	return value
 
 def local(varname, scope):
 	if type(varname) == list:
@@ -151,12 +189,9 @@ def local(varname, scope):
 	else:
 		scope.names[varname.lower()] = None
 
-
+# Conditionals.
 def do_if(cond, code, scope):
-	if cond:
-		return run(code, scope)
-	else:
-		return None
+	if cond: run(code, scope)
 
 def do_ifelse(cond, ift, iff, scope):
 	if cond:
@@ -165,48 +200,59 @@ def do_ifelse(cond, ift, iff, scope):
 		return run(parse(iff), scope)
 
 def do_test(cond, scope):
-	if cond:
-		scope.test = True
+	scope.test = cond
 
 def do_iftrue(code, scope):
 	if scope.test:
-		return run(code, scope)
-	else:
-		return None
+		run(code, scope)
 
 def do_iffalse(code, scope):
 	if not scope.test:
-		return run(code, scope)
-	else:
-		return None
+		run(code, scope)
 
+# Loops.
 def do_while(cond, code, scope):
 	cond = parse(cond)
-	value = None
 	while run(cond, scope):
 		value = run(code, scope)
-	return value
+		if scope.returning:
+			return value
+		elif scope.breaking:
+			scope.breaking = False
+			break
 
 def do_for(varname, init, limit, step, code, scope):
 	make(varname, init, scope)
-	value = None
 	if limit >= init:
 		while scope[varname] <= limit:
 			value = run(code, scope)
+			if scope.returning:
+				return value
+			elif scope.breaking:
+				scope.breaking = False
+				break
 			scope[varname] += step
 	else:
 		while scope[varname] >= limit:
 			value = run(code, scope)
+			if scope.returning:
+				return value
+			elif scope.breaking:
+				scope.breaking = False
+				break
 			scope[varname] += step
-	return value
 
 def do_foreach(varname, items, code, scope):
-	value = None
 	for i in items:
 		make(varname, i, scope)
 		value = run(code, scope)
-	return value
+		if scope.returning:
+			return value
+		elif scope.breaking:
+			scope.breaking = False
+			break
 
+# Lists.
 def iseq(init, limit):
 	if init <= limit:
 		return list(range(init, limit + 1))
@@ -216,7 +262,13 @@ def iseq(init, limit):
 procedures = {
 	"parse": (1, lambda scope, code: parse(code)),
 	"run": (1, lambda scope, code: run(code, scope)),
+	"results": (1, lambda scope, code: results(code, scope)),
 	"load": (1, lambda scope, f: load(f, scope)),
+	"ignore": (1, lambda scope, value: None),
+	
+	"break": (0, lambda scope: do_break(scope)),
+	"continue": (0, lambda scope: do_continue(scope)),
+	"return": (1, lambda scope, value: do_return(value, scope)),
 
 	"print": (1, lambda scope, item: do_print(item)),
 	"type": (1, lambda scope, item: do_type(item)),
@@ -283,4 +335,5 @@ if __name__ == "__main__":
 	
 	toplevel = Scope()
 	#print(parse(sys.argv[1:]))
-	print(run(parse(sys.argv[1:]), toplevel))
+	for i in results(parse(sys.argv[1:]), toplevel):
+		print(i)

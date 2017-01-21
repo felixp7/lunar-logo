@@ -1,0 +1,9 @@
+make greeting do
+	print results parse [Hello, :you !]
+end
+
+make you stranger
+run :greeting
+type [What's your name?]
+make you readword
+run :greeting
