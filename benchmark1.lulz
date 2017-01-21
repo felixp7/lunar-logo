@@ -1,0 +1,9 @@
+-- Loop-and-math benchmark
+make start timer
+make a 1
+for i 1 1000 1 do
+	make a add div :a 2 div :a 3
+end
+print :a
+make finish timer
+print sub :finish :start
