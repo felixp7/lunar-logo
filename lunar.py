@@ -55,9 +55,9 @@ class Closure:
 			local.names[name] = val
 		return run(self.code, local)
 		
-	#def __str__(self):
-	#	return ("fn [" + " ".join(self.arglist)
-	#		+ "] do " + " ".join(self.code) + " end")
+	def __str__(self):
+		return ("fn [" + " ".join(self.arglist) + "] do "
+			+ " ".join([str(i) for i in self.code]) + " end")
 
 def eval_next(code, cursor, scope):
 	value = code[cursor]
@@ -320,12 +320,34 @@ def iseq(init, limit):
 	else:
 		return list(range(init, limit - 1, -1))
 
+# Dictionaries.
+def do_dict(init, scope):
+	dictionary = {}
+	i = 0
+	init = results(parse(init), scope)
+	while i < len(init):
+		key = init[i]
+		i += 1
+		value = i < len(init) and init[i] or None
+		dictionary[key] = value
+		i += 1
+	return dictionary
+
+def put(dictionary, key, value):
+	dictionary[key] = value
+
+def do_del(dictionary, key):
+	del dictionary[key]
+
 procedures = {
 	"parse": (1, lambda scope, code: parse(code)),
 	"run": (1, lambda scope, code: run(code, scope)),
 	"results": (1, lambda scope, code: results(code, scope)),
 	"load": (1, lambda scope, f: load(f, scope)),
 	"ignore": (1, lambda scope, value: None),
+	
+	"scope": (0, lambda scope: scope),
+	"procedures": (0, lambda scope: sorted(list(procedures.keys()))),
 	
 	"break": (0, lambda scope: do_break(scope)),
 	"continue": (0, lambda scope: do_continue(scope)),
@@ -399,6 +421,12 @@ procedures = {
 	"uppercase": (1, lambda scope, s: s.upper()),
 	"split": (1, lambda scope, s: s.split()),
 	"join": (1, lambda scope, seq: " ".join(seq)),
+	"str": (1, lambda scope, n: str(n)),
+	
+	"dict": (1, lambda scope, init: do_dict(init, scope)),
+	"get": (2, lambda scope, d, k: d[k]),
+	"put": (3, lambda scope, d, k, v: put(d, k, v)),
+	"del": (2, lambda scope, d, k: do_del(d, k)),
 	
 	"rnd": (0, lambda scope: random.random()),
 	"random": (2, lambda scope, a, b: random.randint(a, b)),

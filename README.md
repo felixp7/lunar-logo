@@ -44,7 +44,7 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 23 January 2017, Lunar Logo supports 68 procedures (you can find the list at the end of `lunar.py`), including flow control and (first-class) functions with lexical scoping. Dynamic scoping is also possible.
+As of 23 January 2017, Lunar Logo supports 75 procedures (you can find the list at the end of `lunar.py`), including flow control and (first-class) functions with lexical scoping. Dynamic scoping is also possible.
 
 **Beware that once a function has been defined in the current scope, any naked appearance of its name will be taken as an attempt to call it.**
 
