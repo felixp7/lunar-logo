@@ -23,9 +23,9 @@ Now you can load it as follows:
 
 	$ ./lunar.py load benchmark1.lulz
 	6.588005489477243e-80
-	0.21355808000000004
+	0.23427993800000002
 
-Yes, it's slow. You're not going to write real time games in Lunar Logo. Still reasonably fast for something implemented in under 300 lines of Python. Speaking of which.
+Yes, it's slow. You're not going to write real time games in Lunar Logo. Still reasonably fast for something implemented in a few hundred lines of Python. Speaking of which.
 
 Project goals
 -------------
