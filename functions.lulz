@@ -1,0 +1,18 @@
+-- Named function definition...
+function hypot [a b] do
+	return sqrt add mul :a :a mul :b :b
+end
+
+-- ...can be called like this...
+print hypot 3 4
+
+-- ...or indirectly like this...
+print apply :hypot [3 4]
+
+-- ...and is completely equivalent to:
+make hypot2 fn [a b] do
+	return sqrt add mul :a :a mul :b :b
+end
+
+-- Just to make sure now.
+print hypot2 3 4

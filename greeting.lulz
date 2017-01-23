@@ -1,5 +1,7 @@
+-- Dynamic scoping example.
+
 make greeting do
-	print results parse [Hello, :you !]
+	print list Hello, :you
 end
 
 make you stranger

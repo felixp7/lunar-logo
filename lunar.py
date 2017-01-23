@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from __future__ import division
 from __future__ import print_function
 
 import math
@@ -17,8 +18,15 @@ class Scope:
 		self.breaking = False
 		self.returning = False
 	
+	def get(self, key, default=None):
+		if key in self.names:
+			return self.names[key]
+		elif self.parent != None:
+			return self.parent.get(key, default)
+		else:
+			return default
+	
 	def __getitem__(self, key):
-		#key = key.lower()
 		if key in self.names:
 			return self.names[key]
 		elif self.parent != None:
@@ -27,7 +35,6 @@ class Scope:
 			raise KeyError("Undefined variable: " + str(key))
 	
 	def __setitem__(self, key, value):
-		key = key.lower()
 		if key in self.names:
 			self.names[key] = value
 		elif self.parent != None:
@@ -36,6 +43,72 @@ class Scope:
 			#raise KeyError("Undefined variable: " + str(key))
 			self.names[key] = value
 
+class Closure:
+	def __init__(self, arglist, code, scope):
+		self.arglist = arglist
+		self.code = code
+		self.scope = scope
+
+	def __call__(self, args):
+		local = Scope(self.scope)
+		for name, val in zip(self.arglist, args):
+			local.names[name] = val
+		return run(self.code, local)
+		
+	#def __str__(self):
+	#	return ("fn [" + " ".join(self.arglist)
+	#		+ "] do " + " ".join(self.code) + " end")
+
+def eval_next(code, cursor, scope):
+	value = code[cursor]
+	if type(value) == tuple:
+		cursor += 1
+		args = []
+		for i in range(value[0]):
+			if cursor >= len(code):
+				raise SyntaxError(
+					"Not enough arguments.")
+			tmp, cursor = eval_next(code, cursor, scope)
+			args.append(tmp)
+		return value[1](scope, *args), cursor
+	elif type(value) != str:
+		return value, cursor + 1
+	elif value[0] == ":":
+		name = value[1:]
+		return scope[name], cursor + 1
+	elif value == "do":
+		return scan_block(code, cursor + 1)
+	else:
+		closure = scope.get(value.lower(), value)
+		if isinstance(closure, Closure):
+			cursor += 1
+			args = []
+			for i in range(len(closure.arglist)):
+				if cursor >= len(code):
+					raise SyntaxError(
+						"Not enough arguments to "
+						+ value.lower())
+				tmp, cursor = eval_next(code, cursor, scope)
+				args.append(tmp)
+			return closure(args), cursor
+		else:
+			return value, cursor + 1
+
+def scan_block(code, cursor):
+	block = []
+	while code[cursor] != "end":
+		if code[cursor] == "do":
+			tmp, cursor = scan_block(code, cursor + 1)
+			block.append(tmp)
+		else:
+			block.append(code[cursor])
+			cursor += 1
+		if cursor >= len(code):
+			raise SyntaxError(
+				"Unexpected end of input in block.")
+	return block, cursor + 1
+
+# Essential procedures.
 def parse(words):
 	code = []
 	buf = None
@@ -82,44 +155,8 @@ def parse(words):
 	else:
 		return code
 
-def eval_next(code, cursor, scope):
-	value = code[cursor]
-	if type(value) == tuple:
-		cursor += 1
-		args = []
-		for i in range(value[0]):
-			if cursor >= len(code):
-				raise SyntaxError(
-					"Unexpected end of input in eval.")
-			tmp, cursor = eval_next(code, cursor, scope)
-			args.append(tmp)
-		return value[1](scope, *args), cursor
-	elif type(value) != str:
-		return value, cursor + 1
-	elif value[0] == ":":
-		name = value[1:]
-		return scope[name], cursor + 1
-	elif value == "do":
-		return scan_block(code, cursor + 1)
-	else:
-		return value, cursor + 1
-
-def scan_block(code, cursor):
-	block = []
-	while code[cursor] != "end":
-		if code[cursor] == "do":
-			tmp, cursor = scan_block(code, cursor + 1)
-			block.append(tmp)
-		else:
-			block.append(code[cursor])
-			cursor += 1
-		if cursor >= len(code):
-			raise SyntaxError(
-				"Unexpected end of input in block.")
-	return block, cursor + 1
-
-# Essential procedures.
 def run(code, scope):
+	"""Underlies most other control structures."""
 	cursor = 0
 	while cursor < len(code):
 		value, cursor = eval_next(code, cursor, scope)
@@ -167,12 +204,14 @@ def do_return(value, scope):
 
 # Printing out.
 def do_print(value):
+	"""Emit given value to standard output, followed by a newline."""
 	if type(value) == list:
 		return print(" ".join(value))
 	else:
 		return print(value)
 
 def do_type(value):
+	"""Emit given value to standard output, without a newline."""
 	if type(value) == list:
 		return print(" ".join(value), end='')
 	else:
@@ -180,9 +219,15 @@ def do_type(value):
 
 # Creating variables.
 def make(varname, value, scope):
-	scope[varname] = value
+	"""Define a global variable."""
+	scope[varname.lower()] = value
+
+def localmake(varname, value, scope):
+	"""Define a local variable."""
+	scope.names[varname.lower()] = value
 
 def local(varname, scope):
+	"""Declare a local variable, or several in a list."""
 	if type(varname) == list:
 		for i in varname:
 			scope.names[i.lower()] = None
@@ -194,10 +239,11 @@ def do_if(cond, code, scope):
 	if cond: run(code, scope)
 
 def do_ifelse(cond, ift, iff, scope):
+	"""Ternary operator -- returns a value, unlike if/iftrue/iffalse."""
 	if cond:
-		return run(parse(ift), scope)
+		return results(parse(ift), scope)
 	else:
-		return run(parse(iff), scope)
+		return results(parse(iff), scope)
 
 def do_test(cond, scope):
 	scope.test = cond
@@ -252,8 +298,23 @@ def do_foreach(varname, items, code, scope):
 			scope.breaking = False
 			break
 
+# Functions.
+def fn(arglist, code, scope):
+	"""Create a closure over the current scope and return it."""
+	return Closure([i.lower() for i in arglist], code, scope)
+
+def function(name, arglist, code, scope):
+	"""Define a named function in the current scope."""
+	scope.names[name.lower()] = Closure(
+		[i.lower() for i in arglist], code, scope)
+
+def do_apply(closure, args, scope):
+	"""Call a user-defined function with the given argument list."""
+	return closure(results(parse(args), scope))
+
 # Lists.
 def iseq(init, limit):
+	"""Return a sequential list of integers from init to limit."""
 	if init <= limit:
 		return list(range(init, limit + 1))
 	else:
@@ -278,8 +339,10 @@ procedures = {
 	"readword": (0, lambda scope: input()),
 
 	"make": (2, lambda scope, a, b: make(a, b, scope)),
-	"name": (2, lambda scope, a, b: make(b, a, scope)),
+	#"name": (2, lambda scope, a, b: make(b, a, scope)),
 	"local": (1, lambda scope, n: local(n, scope)),
+	"localmake": (1, lambda scope, n: localmake(n, scope)),
+	"thing": (1, lambda scope, n: scope[n.lower()]),
 	
 	"if": (2, lambda scope, a, b: do_if(a, b, scope)),
 	"ifelse": (3, lambda scope, a, b, c: do_ifelse(a, b, c, scope)),
@@ -290,6 +353,10 @@ procedures = {
 	"while": (2, lambda scope, a, b: do_while(a, b, scope)),
 	"for": (5, lambda scope, v, f, t, s, c: do_for(v, f, t, s, c, scope)),
 	"foreach": (3, lambda scope, v, i, c: do_foreach(v, i, c, scope)),
+	
+	"fn": (2, lambda scope, args, code: fn(args, code, scope)),
+	"function": (3, lambda scope, n, a, c: function(n, a, c, scope)),
+	"apply": (2, lambda scope, f, a: do_apply(f, a, scope)),
 	
 	"add": (2, lambda scope, a, b: a + b),
 	"sub": (2, lambda scope, a, b: a - b),
@@ -321,11 +388,22 @@ procedures = {
 	"butfirst": (1, lambda scope, seq: seq[1:]),
 	"butlast": (1, lambda scope, seq: seq[:-1]),
 	"count": (1, lambda scope, seq: len(seq)),
+	
+	"list": (2, lambda scope, a, b: [a, b]),
+	"fput": (2, lambda scope, a, b: [a] + b),
+	"lput": (2, lambda scope, a, b: b + [a]),
+	"item": (2, lambda scope, a, b: b[a]),
 	"iseq": (2, lambda scope, a, b: iseq(a, b)),
+	
+	"lowercase": (1, lambda scope, s: s.lower()),
+	"uppercase": (1, lambda scope, s: s.upper()),
+	"split": (1, lambda scope, s: s.split()),
+	"join": (1, lambda scope, seq: " ".join(seq)),
 	
 	"rnd": (0, lambda scope: random.random()),
 	"random": (2, lambda scope, a, b: random.randint(a, b)),
 	"rerandom": (1, lambda scope, n: random.seed(n)),
+	"pick": (1, lambda scope, n: random.choice(n)),
 	
 	"timer": (0, lambda scope: time.process_time())
 }
@@ -334,6 +412,9 @@ if __name__ == "__main__":
 	import sys
 	
 	toplevel = Scope()
-	#print(parse(sys.argv[1:]))
-	for i in results(parse(sys.argv[1:]), toplevel):
-		print(i)
+	try:
+		for i in results(parse(sys.argv[1:]), toplevel):
+			if i != None:
+				print(i)
+	except Exception as e:
+		print(e, file=sys.stderr)

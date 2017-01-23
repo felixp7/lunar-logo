@@ -44,18 +44,10 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 21 January 2017, Lunar Logo supports 55 procedures (you can find the list at the end of `lunar.py`), including flow control. There are no functions yet; calling `return` will just end the program. For now, you can store a block of code in a variable (code is data in Logo!) and run it repeatedly:
+As of 23 January 2017, Lunar Logo supports 68 procedures (you can find the list at the end of `lunar.py`), including flow control and (first-class) functions with lexical scoping. Dynamic scoping is also possible.
 
-	make greeting do
-		print results parse [Hello, :you !]
-	end
+**Beware that once a function has been defined in the current scope, any naked appearance of its name will be taken as an attempt to call it.**
 
-	make you stranger
-	run :greeting
-	type [What's your name?]
-	make you readword
-	run :greeting
-
-For that matter, calling `break` outside of a loop will also end the program, since there will be nothing to stop the condition from propagating; only `continue` will work correctly anywhere.
+Calling `break` outside of a loop, or `return` outside of a function, will end the program, since there will be nothing to stop the condition from propagating; only `continue` will work correctly in any block of code.
 
 Thanks for reading. More to come.
