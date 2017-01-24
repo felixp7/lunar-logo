@@ -1,18 +1,19 @@
--- Named function definition...
-function hypot [a b] do
-	return sqrt add mul :a :a mul :b :b
+-- A named function...
+function avg [a b] do
+	return div add :a :b 2
 end
 
 -- ...can be called like this...
-print hypot 3 4
+print avg 5 10
 
 -- ...or indirectly like this...
-print apply :hypot [3 4]
+print apply :avg [5 10]
 
 -- ...and is completely equivalent to:
-make hypot2 fn [a b] do
-	return sqrt add mul :a :a mul :b :b
+make avg2 fn [a b] do
+	return div add :a :b 2
 end
+-- (Can't reuse the same name.)
 
 -- Just to make sure now.
-print hypot2 3 4
+print avg2 5 10

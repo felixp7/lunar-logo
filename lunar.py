@@ -298,7 +298,7 @@ def do_for(varname, init, limit, step, code, scope):
 def do_foreach(varname, items, code, scope):
 	"""Foreach loop; the variable is always treated as local."""
 	varname = varname.lower()
-	for i in results(parse(items), scope):
+	for i in items:
 		scope.names[varname] = i
 		value = run(code, scope)
 		if scope.returning:

@@ -1,0 +1,4 @@
+-- The traditional programmer's greeting.
+
+make greeting [Hello, world!]
+print :greeting
