@@ -141,9 +141,11 @@ def parse(words):
 			code.append(True)
 		elif i.lower() == "false":
 			code.append(False)
+		elif i.lower() == "nil":
+			code.append(None)
 		elif i in procedures:
 			code.append(procedures[i])
-		elif i.isdigit():
+		elif i.isdigit() or i[0] == "-" and i[1:].isdigit():
 			code.append(int(i))
 		else:
 			try:
@@ -160,10 +162,7 @@ def run(code, scope):
 	cursor = 0
 	while cursor < len(code):
 		value, cursor = eval_next(code, cursor, scope)
-		if scope.continuing:
-			scope.continuing = False
-			return None
-		elif scope.breaking:
+		if scope.continuing or scope.breaking:
 			return None
 		elif scope.returning:
 			return value
@@ -236,7 +235,7 @@ def local(varname, scope):
 
 # Conditionals.
 def do_if(cond, code, scope):
-	if cond: run(code, scope)
+	if cond: return run(code, scope)
 
 def do_ifelse(cond, ift, iff, scope):
 	"""Ternary operator -- returns a value, unlike if/iftrue/iffalse."""
@@ -250,50 +249,61 @@ def do_test(cond, scope):
 
 def do_iftrue(code, scope):
 	if scope.test:
-		run(code, scope)
+		return run(code, scope)
 
 def do_iffalse(code, scope):
 	if not scope.test:
-		run(code, scope)
+		return run(code, scope)
 
 # Loops.
 def do_while(cond, code, scope):
 	cond = parse(cond)
-	while run(cond, scope):
+	while results(cond, scope)[0]:
 		value = run(code, scope)
 		if scope.returning:
 			return value
+		elif scope.continuing:
+			scope.continuing = False
 		elif scope.breaking:
 			scope.breaking = False
 			break
 
 def do_for(varname, init, limit, step, code, scope):
-	make(varname, init, scope)
+	"""For loop; the variable is always treated as local."""
+	varname = varname.lower()
+	scope.names[varname] = init
 	if limit >= init:
-		while scope[varname] <= limit:
+		while scope.names[varname] <= limit:
 			value = run(code, scope)
 			if scope.returning:
 				return value
+			elif scope.continuing:
+				scope.continuing = False
 			elif scope.breaking:
 				scope.breaking = False
 				break
-			scope[varname] += step
+			scope.names[varname] += step
 	else:
-		while scope[varname] >= limit:
+		while scope.names[varname] >= limit:
 			value = run(code, scope)
 			if scope.returning:
 				return value
+			elif scope.continuing:
+				scope.continuing = False
 			elif scope.breaking:
 				scope.breaking = False
 				break
-			scope[varname] += step
+			scope.names[varname] += step
 
 def do_foreach(varname, items, code, scope):
+	"""Foreach loop; the variable is always treated as local."""
 	for i in items:
-		make(varname, i, scope)
+		scope.names[varname.lower()] = i
 		value = run(code, scope)
 		if scope.returning:
 			return value
+		elif scope.continuing:
+			scope.continuing = False
 		elif scope.breaking:
 			scope.breaking = False
 			break
@@ -311,6 +321,14 @@ def function(name, arglist, code, scope):
 def do_apply(closure, args, scope):
 	"""Call a user-defined function with the given argument list."""
 	return closure(results(parse(args), scope))
+
+def do_map(closure, args, scope):
+	"""Map a user-defined function to the given argument list."""
+	return [closure([i]) for i in results(parse(args), scope)]
+
+def do_filter(closure, args, scope):
+	"""Filter the given argument list by a user-defined function."""
+	return [i for i in results(parse(args), scope) if closure([i])]
 
 # Lists.
 def iseq(init, limit):
@@ -379,6 +397,8 @@ procedures = {
 	"fn": (2, lambda scope, args, code: fn(args, code, scope)),
 	"function": (3, lambda scope, n, a, c: function(n, a, c, scope)),
 	"apply": (2, lambda scope, f, a: do_apply(f, a, scope)),
+	"map": (2, lambda scope, f, a: do_map(f, a, scope)),
+	"filter": (2, lambda scope, f, a: do_filter(f, a, scope)),
 	
 	"add": (2, lambda scope, a, b: a + b),
 	"sub": (2, lambda scope, a, b: a - b),
@@ -419,9 +439,25 @@ procedures = {
 	
 	"lowercase": (1, lambda scope, s: s.lower()),
 	"uppercase": (1, lambda scope, s: s.upper()),
+	"trim": (1, lambda scope, s: s.strip()),
+	"ltrim": (1, lambda scope, s: s.lstrip()),
+	"rtrim": (1, lambda scope, s: s.rstrip()),
+
 	"split": (1, lambda scope, s: s.split()),
 	"join": (1, lambda scope, seq: " ".join(seq)),
-	"str": (1, lambda scope, n: str(n)),
+	"split-by": (2, lambda scope, sep, s: s.split(sep)),
+	"join-by": (2, lambda scope, s, seq: s.join(seq)),
+
+	"to-string": (1, lambda scope, n: str(n)),
+	"parse-int": (1, lambda scope, s: int(s)),
+	"parse-float": (1, lambda scope, s: float(s)),
+	
+	"is-string": (1, lambda scope, n: type(n) == str),
+	"is-bool": (1, lambda scope, n: type(n) == bool),
+	"is-int": (1, lambda scope, n: type(n) == int),
+	"is-float": (1, lambda scope, n: type(n) == float),
+	"is-list": (1, lambda scope, n: type(n) == list),
+	"is-fn": (1, lambda scope, n: isinstance(n, Closure)),
 	
 	"dict": (1, lambda scope, init: do_dict(init, scope)),
 	"get": (2, lambda scope, d, k: d[k]),

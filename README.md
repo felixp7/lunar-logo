@@ -23,7 +23,7 @@ Now you can load it as follows:
 
 	$ ./lunar.py load benchmark1.lulz
 	6.588005489477243e-80
-	0.23427993800000002
+	0.216841399
 
 Yes, it's slow. You're not going to write real time games in Lunar Logo. Still reasonably fast for something implemented in a few hundred lines of Python. Speaking of which.
 
@@ -44,10 +44,10 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 23 January 2017, Lunar Logo supports 75 procedures (you can find the list at the end of `lunar.py`), including flow control and (first-class) functions with lexical scoping. Dynamic scoping is also possible.
+As of 24 January 2017, Lunar Logo supports 90 procedures (you can find the list at the end of `lunar.py`), including flow control and (first-class) functions with lexical scoping. Dynamic scoping is also possible.
 
 **Beware that once a function has been defined in the current scope, any naked appearance of its name will be taken as an attempt to call it.**
 
-Calling `break` outside of a loop, or `return` outside of a function, will end the program, since there will be nothing to stop the condition from propagating; only `continue` will work correctly in any block of code.
+Calling `break` or `continue` outside of a loop, or `return` outside of a function, will end the program, since there will be nothing to stop the condition from propagating.
 
 Thanks for reading. More to come.
