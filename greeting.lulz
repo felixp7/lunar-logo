@@ -7,5 +7,6 @@ end
 make you stranger
 run :greeting
 type [What's your name?]
+type space
 make you readword
 run :greeting

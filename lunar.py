@@ -218,7 +218,7 @@ def do_type(value):
 
 # Creating variables.
 def make(varname, value, scope):
-	"""Define a global variable."""
+	"""If varname exists, change its value, else define it globally."""
 	scope[varname.lower()] = value
 
 def localmake(varname, value, scope):
@@ -297,8 +297,9 @@ def do_for(varname, init, limit, step, code, scope):
 
 def do_foreach(varname, items, code, scope):
 	"""Foreach loop; the variable is always treated as local."""
-	for i in items:
-		scope.names[varname.lower()] = i
+	varname = varname.lower()
+	for i in results(parse(items), scope):
+		scope.names[varname] = i
 		value = run(code, scope)
 		if scope.returning:
 			return value
@@ -340,6 +341,7 @@ def iseq(init, limit):
 
 # Dictionaries.
 def do_dict(init, scope):
+	"""Return new dictionary off a list of alternating keys and values."""
 	dictionary = {}
 	i = 0
 	init = results(parse(init), scope)
@@ -364,8 +366,7 @@ procedures = {
 	"load": (1, lambda scope, f: load(f, scope)),
 	"ignore": (1, lambda scope, value: None),
 	
-	"scope": (0, lambda scope: scope),
-	"procedures": (0, lambda scope: sorted(list(procedures.keys()))),
+	"procedures": (0, lambda scope: procedures),
 	
 	"break": (0, lambda scope: do_break(scope)),
 	"continue": (0, lambda scope: do_continue(scope)),
@@ -413,6 +414,9 @@ procedures = {
 	"sqrt": (1, lambda scope, n: math.sqrt(n)),
 	"sin": (1, lambda scope, n: math.sin(n)),
 	"cos": (1, lambda scope, n: math.cos(n)),
+	"rad": (1, lambda scope, n: math.radians(n)),
+	"deg": (1, lambda scope, n: math.degrees(n)),
+	"hypot": (2, lambda scope, a, b: math.hypot(a, b)),
 	
 	"lte": (2, lambda scope, a, b: a <= b),
 	"lt": (2, lambda scope, a, b: a < b),
@@ -430,6 +434,7 @@ procedures = {
 	"butfirst": (1, lambda scope, seq: seq[1:]),
 	"butlast": (1, lambda scope, seq: seq[:-1]),
 	"count": (1, lambda scope, seq: len(seq)),
+	"sorted": (1, lambda scope, seq: sorted(seq)),
 	
 	"list": (2, lambda scope, a, b: [a, b]),
 	"fput": (2, lambda scope, a, b: [a] + b),
@@ -442,6 +447,11 @@ procedures = {
 	"trim": (1, lambda scope, s: s.strip()),
 	"ltrim": (1, lambda scope, s: s.lstrip()),
 	"rtrim": (1, lambda scope, s: s.rstrip()),
+	
+	"empty": (0, lambda scope: ""),
+	"space": (0, lambda scope: " "),
+	"tab": (0, lambda scope: "\t"),
+	"nl": (0, lambda scope: "\n"),
 
 	"split": (1, lambda scope, s: s.split()),
 	"join": (1, lambda scope, seq: " ".join(seq)),
@@ -457,12 +467,14 @@ procedures = {
 	"is-int": (1, lambda scope, n: type(n) == int),
 	"is-float": (1, lambda scope, n: type(n) == float),
 	"is-list": (1, lambda scope, n: type(n) == list),
+	"is-dict": (1, lambda scope, n: type(n) == dict),
 	"is-fn": (1, lambda scope, n: isinstance(n, Closure)),
 	
 	"dict": (1, lambda scope, init: do_dict(init, scope)),
 	"get": (2, lambda scope, d, k: d[k]),
 	"put": (3, lambda scope, d, k, v: put(d, k, v)),
 	"del": (2, lambda scope, d, k: do_del(d, k)),
+	"keys": (1, lambda scope, d: d.keys()),
 	
 	"rnd": (0, lambda scope: random.random()),
 	"random": (2, lambda scope, a, b: random.randint(a, b)),
