@@ -176,7 +176,51 @@ The list passed to `while` follows the same rule as those passed to `ifelse`.
 Flow control
 ------------
 
+This is all good and well, but sometimes you want to leave a loop early, when some special condition is met.
+
+	make i 1
+	while [lte :i 5] do
+		print results parse [:i times through the loop.]
+		type [Quit (y/n)?]
+		type space
+		make answer lowercase first readword
+		if eq :answer y do
+			break
+		end
+		make i add :i 1
+	end
+
+Nothing special there, just that `break` ends the innermost loop right there. To end just the current iteration, use `continue` instead.
+
+	foreach i parse [1 2 3 5 8] do
+		if eq mod :i 2 0 do
+			continue
+		end
+		print :i
+	end
+
+There's also `return`, that returns a value from a function (early or not), but that can wait until next section.
 
 Variable scope
 --------------
 
+Until now you've only created variables in the main body of the program. That's all good and well. But when working with functions, often you don't want their own local variables to spill out and clog the rest of the code. That's why each new function creates its own *scope*:
+
+	function index-of [needle haystack] do
+		localmake idx 0
+		foreach i :haystack do
+			if eq :i :needle do
+				return :idx
+			end
+			make idx add :idx 1
+		end
+		return -1
+	end
+
+	print index-of c [a b c d e]
+	print index-of f [a b c d e]
+	-- print :idx
+
+If you uncomment the last line, you'll get an error, because `idx` is created local to the function, and ceases to exist after the function returns (another thing this example illustrates). You can change that by replacing the `localmake` in line 2 with vanilla `make`. The latter, you see, creates a global variable if it can't find a local one to update. Function arguments, however, are always local, and so is the variable in a `foreach` or `for` loop. That increases both performance and safety.
+
+(For advanced programmers, Lunar Logo has lexical scope, with all that implies.)

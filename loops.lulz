@@ -17,3 +17,22 @@ while [gte :n 1] do
 	make n div :n 2
 end
 print :n
+
+make i 1
+while [lte :i 5] do
+	print results parse [:i times through the loop.]
+	type [Quit (y/n)?]
+	type space
+	make answer lowercase first readword
+	if eq :answer y do
+		break
+	end
+	make i add :i 1
+end
+
+foreach i parse [1 2 3 5 8] do
+	if eq mod :i 2 0 do
+		continue
+	end
+	print :i
+end

@@ -7,6 +7,7 @@ While Lunar is definitely a Logo, it's not compatible with older dialects. Progr
 - Literal lists can't span lines.
 - Arithmetic operators are `add`, `sub`, `mul`, `div`; there are no infix versions.
 - Comparison operators are `lt`, `lte`, `eq`, `neq`, `gt`, `gte`; no infix versions here, either.
+- predicate names are prefixed with "is-" instead of suffixed with "p".
 - The programmer defines *functions*. The interpreter supplies *procedures*.
 - Scoping is lexical; you can do dynamic scoping as well, but not with functions.
 - Flow control is done with break/continue/return, like in modern languages; `continue` means something else than in UCB Logo.

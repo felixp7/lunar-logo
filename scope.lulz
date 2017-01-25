@@ -1,0 +1,16 @@
+-- Functions, variable scope and return.
+
+function index-of [needle haystack] do
+	localmake idx 0
+	foreach i :haystack do
+		if eq :i :needle do
+			return :idx
+		end
+		make idx add :idx 1
+	end
+	return -1
+end
+
+print index-of c [a b c d e]
+print index-of f [a b c d e]
+-- print :idx

@@ -206,14 +206,16 @@ def do_return(value, scope):
 def do_print(value):
 	"""Emit given value to standard output, followed by a newline."""
 	if type(value) == list:
-		return print(" ".join(value))
+		# Turns out .join() wants all list elements to be strings.
+		return print(" ".join([str(i) for i in value]))
 	else:
 		return print(value)
 
 def do_type(value):
 	"""Emit given value to standard output, without a newline."""
 	if type(value) == list:
-		return print(" ".join(value), end='')
+		# Turns out .join() wants all list elements to be strings.
+		return print(" ".join([str(i) for i in value]), end='')
 	else:
 		return print(value, end='')
 
@@ -378,7 +380,7 @@ procedures = {
 	"make": (2, lambda scope, a, b: make(a, b, scope)),
 	#"name": (2, lambda scope, a, b: make(b, a, scope)),
 	"local": (1, lambda scope, n: local(n, scope)),
-	"localmake": (1, lambda scope, n: localmake(n, scope)),
+	"localmake": (2, lambda scope, a, b: localmake(a, b, scope)),
 	"thing": (1, lambda scope, n: scope[n.lower()]),
 	
 	"if": (2, lambda scope, a, b: do_if(a, b, scope)),
@@ -483,10 +485,15 @@ procedures = {
 if __name__ == "__main__":
 	import sys
 	
-	toplevel = Scope()
-	try:
+	if len(sys.argv) > 1:
+		toplevel = Scope()
+		#try:
 		for i in results(parse(sys.argv[1:]), toplevel):
 			if i != None:
 				print(i)
-	except Exception as e:
-		print(e, file=sys.stderr)
+		#except Exception as e:
+			#print(e, file=sys.stderr)
+	else:
+		print("Lunar Logo alpha release, 2017-01-25")
+		print("Usage:\n\tlunar.py [logo code...]")
+		print("\tlunar.py load <filename>")
