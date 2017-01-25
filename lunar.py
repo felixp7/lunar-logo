@@ -487,12 +487,12 @@ if __name__ == "__main__":
 	
 	if len(sys.argv) > 1:
 		toplevel = Scope()
-		#try:
-		for i in results(parse(sys.argv[1:]), toplevel):
-			if i != None:
-				print(i)
-		#except Exception as e:
-			#print(e, file=sys.stderr)
+		try:
+			for i in results(parse(sys.argv[1:]), toplevel):
+				if i != None:
+					print(i)
+		except Exception as e:
+			print(e, file=sys.stderr)
 	else:
 		print("Lunar Logo alpha release, 2017-01-25")
 		print("Usage:\n\tlunar.py [logo code...]")

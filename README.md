@@ -27,6 +27,15 @@ Now you can load it as follows:
 
 Yes, it's slow. You're not going to write real time games in Lunar Logo. Still reasonably fast for something implemented in a few hundred lines of Python. Speaking of which.
 
+Features
+--------
+
+- A blend of two programming languages reknown for their friendliness.
+- First-class functions with lexical scoping (and blocks with dynamic scoping).
+- Metaprogramming: code is data; the parser and evaluator are procedures in the language.
+- Tiny core: under 200 lines of code in the prototype -- squeaky-clean code, too!
+- Easily extensible and embeddable: many built-in procedures are literal one-liners.
+
 Project goals
 -------------
 
@@ -44,10 +53,6 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 24 January 2017, Lunar Logo supports 99 procedures (you can find the list at the end of `lunar.py`), including flow control and (first-class) functions with lexical scoping. Dynamic scoping is also possible.
+As of 25 January 2017, Lunar Logo supports 99 procedures (you can find the list at the end of `lunar.py`). See the tutorial for an overview.
 
-**Beware that once a function has been defined in the current scope, any naked appearance of its name will be taken as an attempt to call it.**
-
-Calling `break` or `continue` outside of a loop, or `return` outside of a function, will end the program, since there will be nothing to stop the condition from propagating.
-
-Thanks for reading. More to come.
+While the software is considered alpha quality, it's been tested and debugged to a degree; all the essentialy should be working correctly.
