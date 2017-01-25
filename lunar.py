@@ -127,9 +127,10 @@ def parse(words):
 		elif i.startswith("["):
 			if i.endswith("]"):
 				code.append([i[1:-1]])
-			elif len(i) > 1:
+			else:
 				buf = []
-				buf.append(i[1:])
+				if len(i) > 1:
+					buf.append(i[1:])
 				in_list = True
 		elif i.startswith("--"):
 			break
