@@ -1,0 +1,23 @@
+-- Conditional statements
+
+type [Enter a number:]
+type space
+make num parse-int readword
+
+if lt :num 0 do
+	print [Don't be so negative!]
+end
+
+test eq mod :num 2 0
+iftrue do
+	print [I don't even.]
+end
+iffalse do
+	print [That's odd...]
+end
+
+function odd-or-even [n] do
+	return ifelse eq mod :n 2 0 [even] [odd]
+end
+
+print odd-or-even :num

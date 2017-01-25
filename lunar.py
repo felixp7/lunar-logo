@@ -241,9 +241,9 @@ def do_if(cond, code, scope):
 def do_ifelse(cond, ift, iff, scope):
 	"""Ternary operator -- returns a value, unlike if/iftrue/iffalse."""
 	if cond:
-		return results(parse(ift), scope)
+		return results(parse(ift), scope)[0]
 	else:
-		return results(parse(iff), scope)
+		return results(parse(iff), scope)[0]
 
 def do_test(cond, scope):
 	scope.test = cond

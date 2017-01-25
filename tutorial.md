@@ -82,7 +82,7 @@ Anyway, there is more that Lunar Logo can do for you: logic, trigonometry, list 
 Data types
 ----------
 
-You've already met literal lists and blocks of code. Let's see how `lunar.py` parses other kinds of words:
+You've already met literal lists. Let's see how `lunar.py` parses other kinds of words:
 
 - `true` and `false` are read as the corresponding boolean value.
 - `nil` is read as, well, the nil value (a.k.a. "null" or "None" in other languages).
@@ -95,13 +95,44 @@ Speaking of lists, there are some tricks I haven't mentioned:
 
 - An empty pair of square brackets, with or without spaces in-between, is read as a list with no elements.
 - The closing square bracket only counts if it ends a word. The characters "[[]]" parse as a list with one element, the word "[]".
+- You can use `parse` to re-process literals. `parse [[]]` yields a list with one element, the empty list.
 
-Last but not least, there are two other data types, dictionaries and functions, that can't be parsed directly but can be created with the procedures `function`/`fn` and `dict`, respectively.
+Last but not least, there are two other data types, dictionaries and functions, that can't be parsed directly but can be created with the procedures `function`/`fn` and `dict`, respectively. Blocks of code, too, are evaluated at runtime, after the parsing stage.
 
 Conditionals
 ------------
 
 You've already seen how to store a sequence of operations in a block of code. Now let's look at how to express when it's OK to run them.
+
+	type [Enter a number:]
+	type space
+	make num parse-int readword
+
+	if lt :num 0 do
+		print [Don't be so negative!]
+	end
+
+`if` takes a condition and a block of code and runs the block only if the condition holds true. But what if you want to (also) do something otherwise? Append this to the previous example:
+
+	test eq mod :num 2 0
+	iftrue do
+		print [I don't even.]
+	end
+	iffalse do
+		print [That's odd...]
+	end
+
+You can use `iffalse test ...` to chain conditionals, similar to "else if" clauses in other languages. That, however, can be unwieldy if you just want to set a value based on a condition. Let's expand the example some more:
+
+	function odd-or-even [n] do
+		return ifelse eq mod :n 2 0 [even] [odd]
+	end
+
+	print odd-or-even :num
+
+Unlike its brethren, `ifelse` takes a condition and two *literal lists*. It parses and evaluates only one of them, depending on the condition, and returns the first resulting value. It's an error to pass `ifelse` an empty list.
+
+As an aside, note how procedure and function names can contain "strange" characters like a dash. That's thanks to the split-at-whitespace rule.
 
 Loops
 -----
