@@ -320,10 +320,6 @@ def function(name, arglist, code, scope):
 	scope.names[name.lower()] = Closure(
 		[i.lower() for i in arglist], code, scope)
 
-def do_apply(closure, args, scope):
-	"""Call a user-defined function with the given argument list."""
-	return closure(results(parse(args), scope))
-
 def do_map(closure, args, scope):
 	"""Map a user-defined function to the given argument list."""
 	return [closure([i]) for i in results(parse(args), scope)]
@@ -345,7 +341,6 @@ def do_dict(init, scope):
 	"""Return new dictionary off a list of alternating keys and values."""
 	dictionary = {}
 	i = 0
-	init = results(parse(init), scope)
 	while i < len(init):
 		key = init[i]
 		i += 1
@@ -398,7 +393,7 @@ procedures = {
 	
 	"fn": (2, lambda scope, args, code: fn(args, code, scope)),
 	"function": (3, lambda scope, n, a, c: function(n, a, c, scope)),
-	"apply": (2, lambda scope, f, a: do_apply(f, a, scope)),
+	"apply": (2, lambda scope, f, a: f(a)),
 	"map": (2, lambda scope, f, a: do_map(f, a, scope)),
 	"filter": (2, lambda scope, f, a: do_filter(f, a, scope)),
 	

@@ -60,7 +60,7 @@ But that's a primitive way to reuse code. To get serious, you'll want *functions
 	print avg 5 10
 
 	-- ...or indirectly like this...
-	print apply :avg [5 10]
+	print apply :avg list 5 10
 
 	-- ...and is completely equivalent to:
 	make avg2 fn [a b] do
