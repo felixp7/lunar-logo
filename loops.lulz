@@ -1,0 +1,19 @@
+-- Looping constructs
+
+for i 1 10 1 do
+	type :i
+	type tab
+	type mul :i 2
+	type tab
+	print pow :i 2
+end
+
+foreach i parse [1 2 3 5 8] do
+	print sqrt :i
+end
+
+make n 156
+while [gte :n 1] do
+	make n div :n 2
+end
+print :n

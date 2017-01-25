@@ -47,7 +47,7 @@ The keyword `do` introduces a block of code, that goes on until the matching `en
 
 - `type` is like `print`, except it doesn't emit a newline at the end.
 - Because literal whitespace separates words, you have to be explicit about emitting it.
-- The language is case-insensitive: `print`, `Print` and `PRINT` all mean the same to it. Case is preserved, however, inside literal lists, and in words that mean nothing to the interpreter.
+- The language is case-insensitive: `print`, `Print` and `PRINT` all mean the same thing. Case is preserved, however, inside literal lists, and in words that mean nothing to the interpreter.
 
 But that's a primitive way to reuse code. To get serious, you'll want *functions*:
 
@@ -97,7 +97,7 @@ Speaking of lists, there are some tricks I haven't mentioned:
 - The closing square bracket only counts if it ends a word. The characters "[[]]" parse as a list with one element, the word "[]".
 - You can use `parse` to re-process literals. `parse [[]]` yields a list with one element, the empty list.
 
-Last but not least, there are two other data types, dictionaries and functions, that can't be parsed directly but can be created with the procedures `function`/`fn` and `dict`, respectively. Blocks of code, too, are evaluated at runtime, after the parsing stage.
+Last but not least, there are two other data types, dictionaries and functions, that can't be parsed directly but can be created with the procedures `dict` and `function`/`fn`, respectively. Blocks of code, too, are evaluated at runtime, after the parsing stage.
 
 Conditionals
 ------------
@@ -136,4 +136,47 @@ As an aside, note how procedure and function names can contain "strange" charact
 
 Loops
 -----
+
+Now let's see how to run some code repeatedly, either a fixed number of times or while a condition is met. To wit:
+
+	for i 1 10 1 do
+		type :i
+		type tab
+		type mul :i 2
+		type tab
+		print pow :i 2
+	end
+
+`for` takes a variable name followed by three numbers: the initial value, limit and step size (the step size is required), and runs the given block of code with the variable stepping through the interval thus defined.
+
+To loop over more arbitrary data, use `foreach` instead:
+
+	foreach i [1 2 3 5 8] do
+		print sqrt :i
+	end
+
+Except the code above will give an error message. Why? Because the members of a literal list are character strings. You have to parse them explicitly first:
+
+	foreach i parse [1 2 3 5 8] do
+		print sqrt :i
+	end
+
+And no, `foreach` won't do that by itself because you might want to pass it a list that's already stored in a variable, read from the user or built at runtime. It's not the computer's business to try and guess what you want!
+
+Sometimes, though, you just don't know how many times you need to loop around. `while` can help with that:
+
+	make n 156
+	while [gte :n 1] do
+		make n div :n 2
+	end
+	print :n
+
+The list passed to `while` follows the same rule as those passed to `ifelse`.
+
+Flow control
+------------
+
+
+Variable scope
+--------------
 
