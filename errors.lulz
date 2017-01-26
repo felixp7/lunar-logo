@@ -1,0 +1,23 @@
+-- Error handling examples.
+
+catch error do
+	sqrt 2
+end
+
+if neq :error nil do
+	type [Caught error:]
+	type space
+	print :error
+end
+
+catch error do
+	print [Before throwing.]
+	throw Aborted.
+	print [After throwing.]
+end
+
+if neq :error nil do
+	type [Caught error:]
+	type space
+	print :error
+end

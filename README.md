@@ -53,6 +53,6 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 25 January 2017, Lunar Logo supports 99 procedures (you can find the list at the end of `lunar.py`). See the tutorial for an overview.
+As of 26 January 2017, Lunar Logo supports over 100 procedures (you can find the list at the end of `lunar.py`). See the tutorial for an overview.
 
-While the software is considered alpha quality, it's been tested and debugged to a degree; all the essentialy should be working correctly.
+The software is considered alpha quality. It's been tested and debugged to a degree, and all the essentials should be working correctly, but some features are prone to change, especially error handling. Don't rely too much on them yet.

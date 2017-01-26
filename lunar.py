@@ -202,6 +202,18 @@ def do_return(value, scope):
 	scope.returning = True
 	return value
 
+# Error handling
+def throw(message):
+	raise RuntimeError(message)
+
+def catch(varname, code, scope):
+	varname = varname.lower()
+	scope.names[varname] = None
+	try:
+		return run(code, scope)
+	except Exception as e:
+		scope.names[varname] = str(e)
+
 # Printing out.
 def do_print(value):
 	"""Emit given value to standard output, followed by a newline."""
@@ -365,6 +377,10 @@ procedures = {
 	"ignore": (1, lambda scope, value: None),
 	
 	"procedures": (0, lambda scope: procedures),
+	"locals": (0, lambda scope: scope.names),
+
+	"throw": (1, lambda scope, msg: throw(msg)),
+	"catch": (2, lambda scope, name, code: catch(name, code, scope)),
 	
 	"break": (0, lambda scope: do_break(scope)),
 	"continue": (0, lambda scope: do_continue(scope)),
@@ -398,6 +414,7 @@ procedures = {
 	"apply": (2, lambda scope, f, a: f(a)),
 	"map": (2, lambda scope, f, a: do_map(f, a, scope)),
 	"filter": (2, lambda scope, f, a: do_filter(f, a, scope)),
+	"arity": (1, lambda scope, f: len(f.arglist)),
 	
 	"add": (2, lambda scope, a, b: a + b),
 	"sub": (2, lambda scope, a, b: a - b),
@@ -440,6 +457,8 @@ procedures = {
 	"item": (2, lambda scope, a, b: b[a]),
 	"iseq": (2, lambda scope, a, b: iseq(a, b)),
 	
+	"slice": (3, lambda scope, a, b, seq: seq[a:b]),
+	
 	"lowercase": (1, lambda scope, s: s.lower()),
 	"uppercase": (1, lambda scope, s: s.upper()),
 	"trim": (1, lambda scope, s: s.strip()),
@@ -455,6 +474,10 @@ procedures = {
 	"join": (1, lambda scope, seq: " ".join(seq)),
 	"split-by": (2, lambda scope, sep, s: s.split(sep)),
 	"join-by": (2, lambda scope, s, seq: s.join(seq)),
+	"word": (2, lambda scope, a, b: a + b),
+	
+	"startswith": (2, lambda scope, a, b: b.startswith(a)),
+	"endswith": (2, lambda scope, a, b: b.endswith(a)),
 
 	"to-string": (1, lambda scope, n: str(n)),
 	"parse-int": (1, lambda scope, s: int(s)),

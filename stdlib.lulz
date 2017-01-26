@@ -1,0 +1,23 @@
+function index-of [needle haystack] do
+	localmake idx 0
+	foreach i :haystack do
+		if eq :i :needle do
+			return :idx
+		end
+		make idx add :idx 1
+	end
+	return -1
+end
+
+function is-member [elm seq] do
+	foreach i :seq do
+		if eq :i :elm do
+			return true
+		end
+	end
+	return false
+end
+
+function has-key [name mapping] do
+	return is-member :name keys :mapping
+end
