@@ -426,6 +426,7 @@ procedures = {
 	"abs": (1, lambda scope, n: abs(n)),
 	"int": (1, lambda scope, n: int(n)),
 	
+	"pi": (0, lambda scope: math.pi),
 	"sqrt": (1, lambda scope, n: math.sqrt(n)),
 	"sin": (1, lambda scope, n: math.sin(n)),
 	"cos": (1, lambda scope, n: math.cos(n)),
@@ -490,6 +491,11 @@ procedures = {
 	"is-list": (1, lambda scope, n: type(n) == list),
 	"is-dict": (1, lambda scope, n: type(n) == dict),
 	"is-fn": (1, lambda scope, n: isinstance(n, Closure)),
+
+	"is-space": (1, lambda scope, n: type(n) == str and n.isspace()),
+	"is-alpha": (1, lambda scope, n: type(n) == str and n.isalpha()),
+	"is-alnum": (1, lambda scope, n: type(n) == str and n.isalnum()),
+	"is-digit": (1, lambda scope, n: type(n) == str and n.isdigit()),
 	
 	"dict": (1, lambda scope, init: do_dict(init, scope)),
 	"get": (2, lambda scope, d, k: d[k]),

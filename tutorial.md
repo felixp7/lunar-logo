@@ -224,3 +224,39 @@ Until now you've only created variables in the main body of the program. That's 
 If you uncomment the last line, you'll get an error, because `idx` is created local to the function, and ceases to exist after the function returns (another thing this example illustrates). You can change that by replacing the `localmake` in line 2 with vanilla `make`. The latter, you see, creates a global variable if it can't find a local one to update. Function arguments, however, are always local, and so is the variable in a `foreach` or `for` loop. That increases both performance and safety.
 
 (For advanced programmers, Lunar Logo has lexical scope, with all that implies.)
+
+Error handling
+--------------
+
+An error can happen at any time while running a Logo program. By default, that ends the run right there. But that makes programs rather frail, so Lunar gives you a way to catch errors when they happen and do something sensible about them.
+
+	catch error do
+		sqrt 2
+	end
+
+	if neq :error nil do
+		type [Caught error:]
+		type space
+		print :error
+	end
+
+	catch error do
+		print [Before throwing.]
+		throw Aborted.
+		print [After throwing.]
+	end
+
+	if neq :error nil do
+		type [Caught error:]
+		type space
+		print :error
+	end
+
+`catch` simply runs the given block of code; if there was an error along the way, the error data will be placed in the given variable ("error" is just another name). Otherwise, the variable will be nil. Either way, the program will continue normally instead of being interrupted.
+
+You can throw your own errors with `throw`. `catch` makes no difference between yours and those thrown by the language itself. If you need to tell them apart, inspect the error data in your code.
+
+Restrictions
+------------
+
+By design, vanilla Lunar Logo can't connect to the Internet, access the file system or run other programs. That's to keep scripts obtained from untrusted sources from messing up your computer. Specialized applications may extend the language with their own procedures.
