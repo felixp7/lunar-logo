@@ -21,3 +21,15 @@ end
 function has-key [name mapping] do
 	return is-member :name keys :mapping
 end
+
+-- Return a reference to a built-in procedure by quoted name.
+function proc [names] do
+	return first parse :names
+end
+
+-- Wrap a built-in procedure into a function for use with MAP or FILTER.
+function through [names] do
+	return fn [arg] do
+		return first results list proc :names :arg
+	end
+end

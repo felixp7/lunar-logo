@@ -334,13 +334,13 @@ def function(name, arglist, code, scope):
 	scope.names[name.lower()] = Closure(
 		[i.lower() for i in arglist], code, scope)
 
-def do_map(closure, args, scope):
+def do_map(closure, args):
 	"""Map a user-defined function to the given argument list."""
-	return [closure([i]) for i in results(parse(args), scope)]
+	return [closure([i]) for i in args]
 
-def do_filter(closure, args, scope):
+def do_filter(closure, args):
 	"""Filter the given argument list by a user-defined function."""
-	return [i for i in results(parse(args), scope) if closure([i])]
+	return [i for i in args if closure([i])]
 
 # Lists.
 def iseq(init, limit):
@@ -412,8 +412,8 @@ procedures = {
 	"fn": (2, lambda scope, args, code: fn(args, code, scope)),
 	"function": (3, lambda scope, n, a, c: function(n, a, c, scope)),
 	"apply": (2, lambda scope, f, a: f(a)),
-	"map": (2, lambda scope, f, a: do_map(f, a, scope)),
-	"filter": (2, lambda scope, f, a: do_filter(f, a, scope)),
+	"map": (2, lambda scope, f, a: do_map(f, a)),
+	"filter": (2, lambda scope, f, a: do_filter(f, a)),
 	"arity": (1, lambda scope, f: len(f.arglist)),
 	
 	"add": (2, lambda scope, a, b: a + b),

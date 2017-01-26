@@ -5,6 +5,8 @@ Differences from USB Logo
 While Lunar is definitely a Logo, it's not compatible with older dialects. Programmers used to, say, UCB Logo -- the *de facto* standard -- may be tripped by a number of differences:
 
 - Literal lists can't span lines.
+- You can't quote a word, only a list. But words can be taken literally.
+- Lists are internally implemented as resizable arrays.
 - Arithmetic operators are `add`, `sub`, `mul`, `div`; there are no infix versions.
 - Comparison operators are `lt`, `lte`, `eq`, `neq`, `gt`, `gte`; no infix versions here, either.
 - predicate names are prefixed with "is-" instead of suffixed with "p".
