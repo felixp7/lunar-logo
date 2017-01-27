@@ -358,6 +358,9 @@ def iseq(init, limit):
 	else:
 		return list(range(init, limit - 1, -1))
 
+def setitem(idx, seq, value):
+	seq[idx] = value
+
 # Dictionaries.
 def do_dict(init, scope):
 	"""Return new dictionary off a list of alternating keys and values."""
@@ -469,6 +472,7 @@ procedures = {
 	"iseq": (2, lambda scope, a, b: iseq(a, b)),
 	
 	"slice": (3, lambda scope, a, b, seq: seq[a:b]),
+	"setitem": (3, lambda scope, i, seq, v: setitem(i, seq, v)),
 	
 	"lowercase": (1, lambda scope, s: s.lower()),
 	"uppercase": (1, lambda scope, s: s.upper()),

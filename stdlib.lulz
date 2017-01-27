@@ -23,11 +23,13 @@ function has-key [name mapping] do
 end
 
 -- Return a reference to a built-in procedure by quoted name.
+-- run list proc [print] 3
 function proc [names] do
 	return first parse :names
 end
 
 -- Wrap a built-in procedure into a function for use with MAP or FILTER.
+-- print load stdlib.lulz filter through [is-digit] [123 abc 567]
 function through [names] do
 	return fn [arg] do
 		return first results list proc :names :arg

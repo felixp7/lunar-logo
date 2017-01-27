@@ -16,5 +16,6 @@ While Lunar is definitely a Logo, it's not compatible with older dialects. Progr
 - There's no template iteration; `foreach` uses an ordinary variable, while `apply`, `map` and `filter` take a function.
 - First-class dictionaries replace property lists, with different accessors.
 - `catch` and `throw` work differently.
+- `setitem` operates on lists, not arrays (which aren't implemented).
 
 Blocks of code are, of course, new to Lunar Logo, and they are used instead of lists in several places.
