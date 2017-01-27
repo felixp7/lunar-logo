@@ -2,7 +2,7 @@ Lunar Logo
 ==========
 
 
-Welcome to Lunar Logo, a toy scripting language based on Logo and Lua, with a tiny core and very clean syntax, currently implemented as a stand-alone Python module. Example usage:
+Welcome to Lunar Logo, an experimental scripting language based on Logo and Lua, with a tiny core and very clean syntax, currently implemented as a stand-alone Python module. Example usage:
 
 	$ ./lunar.py sqrt add mul 3 3 mul 4 4
 	5.0
@@ -30,7 +30,7 @@ Yes, it's slow. You're not going to write real time games in Lunar Logo. Still r
 Features
 --------
 
-- A blend of two programming languages reknown for their friendliness.
+- A blend of two programming languages famous for friendliness.
 - First-class functions with lexical scoping (and blocks with dynamic scoping).
 - Metaprogramming: code is data; the parser and evaluator are procedures in the language.
 - Tiny core: under 200 lines of code in the prototype -- squeaky-clean code, too!
@@ -42,6 +42,11 @@ Project goals
 - A language that needs little or no escaping when embedded into string literals, command lines and such.
 - A language that doesn't run *too* slowly when implemented in another interpreted language.
 - A language that throws few exceptions. A surprising amount of modern languages in widespread use have other error handling mechanisms.
+
+Uses
+----
+
+Lunar Logo is designed to be used as a command language for driving larger applications. Imagine a command-line parser that can understand any instructions rather than just flags and options!
 
 History
 -------

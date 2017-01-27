@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Clean, minimal scripting language based on Logo and Lua."""
+
 from __future__ import division
 from __future__ import print_function
 
@@ -75,6 +77,7 @@ def eval_next(code, cursor, scope):
 		return value, cursor + 1
 	elif value[0] == ":":
 		name = value[1:]
+		# Expect name to be already lowercased.
 		return scope[name], cursor + 1
 	elif value == "do":
 		return scan_block(code, cursor + 1)
@@ -471,6 +474,7 @@ procedures = {
 	"item": (2, lambda scope, a, b: b[a]),
 	"iseq": (2, lambda scope, a, b: iseq(a, b)),
 	
+	"concat": (2, lambda scope, a, b: a + b),
 	"slice": (3, lambda scope, a, b, seq: seq[a:b]),
 	"setitem": (3, lambda scope, i, seq, v: setitem(i, seq, v)),
 	
@@ -505,6 +509,7 @@ procedures = {
 	"is-list": (1, lambda scope, n: type(n) == list),
 	"is-dict": (1, lambda scope, n: type(n) == dict),
 	"is-fn": (1, lambda scope, n: isinstance(n, Closure)),
+	"is-proc": (1, lambda scope, n: n in procedures.values()),
 
 	"is-space": (1, lambda scope, n: type(n) == str and n.isspace()),
 	"is-alpha": (1, lambda scope, n: type(n) == str and n.isalpha()),
