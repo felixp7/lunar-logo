@@ -117,7 +117,7 @@ def parse(words):
 	buf = None
 	in_list = False
 	for i in words:
-		if in_list == True:
+		if in_list:
 			if i.endswith("]"):
 				if len(i) > 1:
 					buf.append(i[:-1])
@@ -147,8 +147,8 @@ def parse(words):
 			code.append(False)
 		elif i.lower() == "nil":
 			code.append(None)
-		elif i in procedures:
-			code.append(procedures[i])
+		elif i.lower() in procedures:
+			code.append(procedures[i.lower()])
 		elif i.isdigit() or i[0] == "-" and i[1:].isdigit():
 			code.append(int(i))
 		else:
@@ -176,6 +176,7 @@ def run(code, scope):
 					+ str(value))
 
 def results(code, scope):
+	"""Underlies while, ifelse and the command line."""
 	values = []
 	cursor = 0
 	while cursor < len(code):
