@@ -176,17 +176,16 @@ func ScanBlock(code List, cursor int) (List, int, error) {
 
 func Parse(words []string, context map[string]Builtin) (List, error) {
 	code := make([]interface{}, 0, len(words))
-	var buf List = nil
+	var buf []string = nil
 	in_list := false
 	for _, i := range(words) {
-		if len(i) == 0 { continue }
 		lower := strings.ToLower(i)
 		if in_list {
 			if strings.HasSuffix(i, "]") {
 				if len(i) > 1 {
 					buf = append(buf, i[:len(i) - 1])
 				}
-				code = append(code, List(buf))
+				code = append(code, buf)
 				in_list = false
 			} else {
 				buf = append(buf, i)
@@ -197,7 +196,7 @@ func Parse(words []string, context map[string]Builtin) (List, error) {
 			if strings.HasSuffix(i, "]") {
 				code = append(code, List{i[1:len(i) - 1]})
 			} else {
-				buf = make([]interface{}, 0)
+				buf = make([]string, 0)
 				if len(i) > 1 {
 					buf = append(buf, i[1:])
 				}
@@ -287,7 +286,9 @@ func Load(fn string, ctx map[string]Builtin, s *Scope) (interface{}, error) {
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		words := splitre.Split(scanner.Text(), -1)
+		line := strings.TrimSpace(scanner.Text())
+		if len(line) == 0 { continue }
+		words := splitre.Split(line, -1)
 		tokens, err := Parse(words, ctx)
 		if err != nil { return nil, err }
 		code = append(code, tokens...)
@@ -339,6 +340,13 @@ func For(v string, i, l, p float64, code List, s *Scope) (interface{}, error) {
 	return nil, nil
 }
 
+func ToString(input interface{}) string {
+	switch input := input.(type) {
+		case string: return string(input)
+		default: return fmt.Sprint(input)
+	}
+}
+
 func ParseFloat(input interface{}) float64 {
 	switch input := input.(type) {
 		case float64: return float64(input)
@@ -351,6 +359,21 @@ func ParseFloat(input interface{}) float64 {
 				return math.NaN()
 			}
 		default: return math.NaN()
+	}
+}
+
+func ParseInt(input interface{}) int {
+	switch input := input.(type) {
+		case float64: return int(input)
+		case int: return int(input)
+		case string:
+			value, err := strconv.Atoi(input)
+			if err == nil {
+				return value
+			} else {
+				return int(math.NaN())
+			}
+		default: return int(math.NaN())
 	}
 }
 
@@ -373,21 +396,37 @@ var Procedures = map[string]Builtin {
 				fmt.Sprint(a[0])}
 		}
 	}},
+	"ignore": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return nil, nil
+	}},
 	
 	"print": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		fmt.Fprintln(Outs, a[0])
 		return nil, nil
 	}},
+	"type": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		fmt.Fprint(Outs, a[0])
+		return nil, nil
+	}},
+	"show": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		fmt.Fprintf(Outs, "%#v\n", a[0])
+		return nil, nil
+	}},
 	
 	"make": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		if varname, ok := a[0].(string); ok {
-			s.Put(strings.ToLower(varname), a[1])
-			return nil, nil
-		} else {
-			return nil, Error{
-				"Varname should be string in make, found: " +
-				fmt.Sprint(a[0])}
-		}
+		varname := ToString(a[0])
+		s.Put(strings.ToLower(varname), a[1])
+		return nil, nil
+	}},
+	"localmake": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		varname := ToString(a[0])
+		s.Names[strings.ToLower(varname)] = a[1]
+		return nil, nil
+	}},
+	"thing": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		varname := ToString(a[0])
+		return s.Get(strings.ToLower(varname))
 	}},
 	
 	"for": {5, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -398,6 +437,7 @@ var Procedures = map[string]Builtin {
 		code := a[4].(List)
 		return For(varname, init, limit, step, code, s)
 	}},
+	
 	"add": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch t1 := a[0].(type) {
 		case int:
@@ -434,8 +474,103 @@ var Procedures = map[string]Builtin {
 			return math.NaN(), nil
 		}
 	}},
+	"mul": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch t1 := a[0].(type) {
+		case int:
+			switch t2 := a[1].(type) {
+				case int: return t1 * t2, nil
+				case float64: return float64(t1) * t2, nil
+				default: return math.NaN(), nil
+			}
+		case float64:
+			switch t2 := a[1].(type) {
+				case int: return t1 * float64(t2), nil
+				case float64: return t1 * t2, nil
+				default: return math.NaN(), nil
+			}
+		default:
+			return math.NaN(), nil
+		}
+	}},
 	"div": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return ParseFloat(a[0]) / ParseFloat(a[1]), nil
+	}},
+	"mod": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ParseInt(a[0]) % ParseInt(a[1]), nil
+	}},
+	"pow": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return math.Pow(ParseFloat(a[0]), ParseFloat(a[1])), nil
+	}},
+
+	"pi": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return math.Pi, nil
+	}},
+	"sqrt": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return math.Sqrt(ParseFloat(a[0])), nil
+	}},
+	"sin": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return math.Sin(ParseFloat(a[0])), nil
+	}},
+	"cos": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return math.Cos(ParseFloat(a[0])), nil
+	}},
+	"hypot": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return math.Hypot(ParseFloat(a[0]), ParseFloat(a[1])), nil
+	}},
+
+	"lowercase": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.ToLower(ToString(a[0])), nil
+	}},
+	"uppercase": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.ToUpper(ToString(a[0])), nil
+	}},
+	"trim": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.TrimSpace(ToString(a[0])), nil
+	}},
+	"ltrim": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.TrimLeft(ToString(a[0]), " \t\r\n\v"), nil
+	}},
+	"rtrim": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.TrimRight(ToString(a[0]), " \t\r\n\v"), nil
+	}},
+
+	"empty": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return "", nil
+	}},
+	"space": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return " ", nil
+	}},
+	"tab": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return "\t", nil
+	}},
+	"nl": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return "\n", nil
+	}},
+
+	"starts-with": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.HasPrefix(
+			ToString(a[1]), ToString(a[0])), nil
+	}},
+	"ends-with": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.HasSuffix(
+			ToString(a[1]), ToString(a[0])), nil
+	}},
+	
+	"to-string": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ToString(a[0]), nil
+	}},
+	"parse-int": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ParseInt(a[0]), nil
+	}},
+	"parse-float": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ParseFloat(a[0]), nil
 	}},
 
 	"timer": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -454,7 +589,18 @@ func init() {
 				fmt.Sprint(a[0])}
 		}
 	}
-	Procedures["load"] = Builtin{1,	tmp}
+	Procedures["load"] = Builtin{1, tmp}
+
+	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
+		if words, ok := a[0].([]string); ok {
+			return Parse(words, Procedures)
+		} else {
+			return nil, Error{
+				"Parse expects a list of strings, found: " +
+				fmt.Sprint(a[0])}
+		}
+	}
+	Procedures["parse"] = Builtin{1, tmp}
 }
 
 func main() {
