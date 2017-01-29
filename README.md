@@ -7,25 +7,31 @@ Welcome to Lunar Logo, an experimental scripting language based on Logo and Lua,
 	$ ./lunar.py sqrt add mul 3 3 mul 4 4
 	5.0
 
-That's right, you can type Lunar Logo code at a Bash prompt without escaping it (within reason). For a bigger sample, put this code in a file, say `benchmark1.lulz`:
+That's right, you can type Lunar Logo code at a Bash prompt without escaping it (within reason). For a bigger sample, put this code in a file, say `repl.lulz`:
 
-	-- Loop-and-math benchmark
-	make start timer
-	make a 1
-	for i 1 1000 1 do
-		make a add div :a 2 div :a 3
+	print [Welcome to Lunar Logo. Enter your commands, or BYE to quit.]
+	while [true] do
+		type >
+		type space
+		make cmd readline
+		if eq 0 count :cmd do
+			continue
+		end
+		if eq bye lowercase first :cmd do
+			break
+		end
+		foreach i results parse :cmd do
+			if neq :i nil do
+				show :i
+			end
+		end
 	end
-	print :a
-	make finish timer
-	print sub :finish :start
 
 Now you can load it as follows:
 
-	$ ./lunar.py load benchmark1.lulz
-	6.588005489477243e-80
-	0.216841399
+	$ ./lunar.py load repl.lulz
 
-Yes, it's slow. You're not going to write real time games in Lunar Logo. Still reasonably fast for something implemented in a few hundred lines of Python. Speaking of which.
+Indeed, Lunar Logo doesn't need a built-in interactive mode because you can code one yourself in just a few lines!
 
 Features
 --------
@@ -61,3 +67,5 @@ Status
 As of 26 January 2017, Lunar Logo supports over 100 procedures (you can find the list at the end of `lunar.py`). See the tutorial for an overview.
 
 The software is considered alpha quality. It's been tested and debugged to a degree, and all the essentials should be working correctly, but some features are prone to change, especially error handling. Don't rely too much on them yet.
+
+Known bug: as of 29 January, the variable scoping example is broken.

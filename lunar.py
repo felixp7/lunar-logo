@@ -284,6 +284,7 @@ def do_iffalse(code, scope):
 
 # Loops.
 def do_while(cond, code, scope):
+	"""While loop; the condition must be a literal list."""
 	cond = parse(cond)
 	while results(cond, scope)[0]:
 		value = run(code, scope)
@@ -391,8 +392,8 @@ procedures = {
 	"load": (1, lambda scope, f: load(f, scope)),
 	"ignore": (1, lambda scope, value: None),
 	
-	"procedures": (0, lambda scope: procedures),
-	"locals": (0, lambda scope: scope.names),
+	#"procedures": (0, lambda scope: procedures),
+	#"locals": (0, lambda scope: scope.names),
 
 	"throw": (1, lambda scope, msg: throw(msg)),
 	"catch": (2, lambda scope, name, code: catch(name, code, scope)),
@@ -496,8 +497,8 @@ procedures = {
 	"join-by": (2, lambda scope, s, seq: s.join(seq)),
 	"word": (2, lambda scope, a, b: a + b),
 	
-	"startswith": (2, lambda scope, a, b: b.startswith(a)),
-	"endswith": (2, lambda scope, a, b: b.endswith(a)),
+	"starts-with": (2, lambda scope, a, b: b.startswith(a)),
+	"ends-with": (2, lambda scope, a, b: b.endswith(a)),
 
 	"to-string": (1, lambda scope, n: str(n)),
 	"parse-int": (1, lambda scope, s: int(s)),
