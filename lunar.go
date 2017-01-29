@@ -86,6 +86,28 @@ func (self List) Less(a, b int) bool {
 	}
 }
 
+// Equal complements sort.Interface to enable all comparison operators.
+func (self List) Equal(a, b int) bool {
+	switch item1 := self[a].(type) {
+	case int:
+		switch item2 := self[b].(type) {
+			case int: return item1 == item2
+			case float64: return float64(item1) == item2
+			default: panic(Error{fmt.Sprintf(
+				"Can't compare %T to %T.", item1, item2)})
+		}
+	case float64:
+		switch item2 := self[b].(type) {
+			case int: return item1 == float64(item2)
+			case float64: return item1 == item2
+			default: panic(Error{fmt.Sprintf(
+				"Can't compare %T to %T.", item1, item2)})
+		}
+	default:
+		return self[a] == self[b]
+	}
+}
+
 func (self *Scope) Get(name string) (interface{}, error) {
 	if value, ok := self.Names[name]; ok {
 		return value, nil
@@ -230,7 +252,7 @@ func Parse(words []string, context map[string]Builtin) (List, error) {
 			code = append(code, make(List, 0))
 		} else if strings.HasPrefix(i, "[") {
 			if strings.HasSuffix(i, "]") {
-				code = append(code, List{i[1:len(i) - 1]})
+				code = append(code, []string{i[1:len(i) - 1]})
 			} else {
 				buf = make([]string, 0)
 				if len(i) > 1 {
@@ -376,6 +398,68 @@ func For(v string, i, l, p float64, code List, s *Scope) (interface{}, error) {
 	return nil, nil
 }
 
+func First(value interface{}) (interface{}, error) {
+	switch seq := value.(type) {
+	case List:
+		if len(seq) > 0 {
+			return seq[0], nil
+		} else {
+			return nil, Error{"First got an empty list."}
+		}
+	case []string:
+		if len(seq) > 0 {
+			return seq[0], nil
+		} else {
+			return nil, Error{"First got empty literal list."}
+		}
+	case string:
+		if len(seq) > 0 {
+			return seq[0], nil
+		} else {
+			return nil, Error{"First got an empty string."}
+		}
+	default:
+		return nil, Error{
+			"First expects a sequence, got: " + fmt.Sprint(value)}
+	}
+}
+
+func Last(value interface{}) (interface{}, error) {
+	switch seq := value.(type) {
+	case List:
+		if len(seq) > 0 {
+			return seq[len(seq) - 1], nil
+		} else {
+			return nil, Error{"Last got an empty list."}
+		}
+	case []string:
+		if len(seq) > 0 {
+			return seq[len(seq) - 1], nil
+		} else {
+			return nil, Error{"Last got empty literal list."}
+		}
+	case string:
+		if len(seq) > 0 {
+			return seq[len(seq) - 1], nil
+		} else {
+			return nil, Error{"Last got an empty string."}
+		}
+	default:
+		return nil, Error{
+			"Last expects a sequence, got: " + fmt.Sprint(value)}
+	}
+}
+
+func ToBool(input interface{}) bool {
+	switch input := input.(type) {
+		case bool: return input
+		case int: return input != 0
+		case float64: return input != 0
+		default: panic(Error{fmt.Sprintf(
+			"Can't convert %#v to bool.", input)})
+	}
+}
+
 func ToString(input interface{}) string {
 	switch input := input.(type) {
 		case string: return string(input)
@@ -409,7 +493,8 @@ func ParseInt(input interface{}) int {
 			} else {
 				return int(math.NaN())
 			}
-		default: return int(math.NaN())
+		default: panic(Error{fmt.Sprintf(
+			"Can't convert %#v to int.", input)})
 	}
 }
 
@@ -466,7 +551,7 @@ var Procedures = map[string]Builtin {
 	}},
 	
 	"for": {5, func (s *Scope, a ...interface{}) (interface{}, error) {
-		varname := a[0].(string)
+		varname := ToString(a[0])
 		init := ParseFloat(a[1])
 		limit := ParseFloat(a[2])
 		step := ParseFloat(a[3])
@@ -569,6 +654,42 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 
+	"lt": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return List(a).Less(0, 1), nil
+	}},
+	"lte": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return List(a).Less(0, 1) || List(a).Equal(0, 1), nil
+	}},
+	"eq": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return List(a).Equal(0, 1), nil
+	}},
+	"neq": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return !List(a).Equal(0, 1), nil
+	}},
+	"gt": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return !(List(a).Less(0, 1) || List(a).Equal(0, 1)), nil
+	}},
+	"gte": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return !List(a).Less(0, 1), nil
+	}},
+
+	"and": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ToBool(a[0]) && ToBool(a[1]), nil
+	}},
+	"or": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ToBool(a[0]) || ToBool(a[1]), nil
+	}},
+	"not": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return !ToBool(a[0]), nil
+	}},
+	
+	"first": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return First(a[0])
+	}},
+	"last": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return Last(a[0])
+	}},
+
 	"lowercase": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		return strings.ToLower(ToString(a[0])), nil
@@ -598,6 +719,15 @@ var Procedures = map[string]Builtin {
 	}},
 	"nl": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return "\n", nil
+	}},
+	
+	"split": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return splitre.Split(
+			strings.TrimSpace(ToString(a[0])), -1), nil
+	}},
+	"word": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ToString(a[0]) + ToString(a[1]), nil
 	}},
 
 	"starts-with": {2,
@@ -673,8 +803,10 @@ func main() {
 			fmt.Fprintln(Errs, err)
 		} 
 	} else {
-		fmt.Println("Lunar Logo alpha release, 2017-01-28")
+		fmt.Println("Lunar Logo alpha release, 2017-01-29")
 		fmt.Println("Usage:\n\tlunar.py [logo code...]")
 		fmt.Println("\tlunar.py load <filename>")
+		
+		fmt.Printf("Compiled with %d procedures.\n", len(Procedures))
 	}
 }

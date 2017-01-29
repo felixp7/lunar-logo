@@ -469,7 +469,7 @@ procedures = {
 	"item": (2, lambda scope, a, b: b[a]),
 	"iseq": (2, lambda scope, a, b: iseq(a, b)),
 	
-	"concat": (2, lambda scope, a, b: a + b),
+	"concat": (2, lambda scope, a, b: list(a) + list(b)),
 	"slice": (3, lambda scope, a, b, seq: seq[a:b]),
 	"setitem": (3, lambda scope, i, seq, v: setitem(i, seq, v)),
 	
@@ -488,7 +488,7 @@ procedures = {
 	"join": (1, lambda scope, seq: " ".join(seq)),
 	"split-by": (2, lambda scope, sep, s: s.split(sep)),
 	"join-by": (2, lambda scope, s, seq: s.join(seq)),
-	"word": (2, lambda scope, a, b: a + b),
+	"word": (2, lambda scope, a, b: str(a) + str(b)),
 	
 	"starts-with": (2, lambda scope, a, b: b.startswith(a)),
 	"ends-with": (2, lambda scope, a, b: b.endswith(a)),
@@ -537,6 +537,6 @@ if __name__ == "__main__":
 		except Exception as e:
 			print(e, file=sys.stderr)
 	else:
-		print("Lunar Logo alpha release, 2017-01-25")
+		print("Lunar Logo alpha release, 2017-01-29")
 		print("Usage:\n\tlunar.py [logo code...]")
 		print("\tlunar.py load <filename>")
