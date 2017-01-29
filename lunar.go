@@ -50,6 +50,42 @@ func (self Error) Error() string {
 	return fmt.Sprint(self.Data)
 }
 
+func (self List) Len() int { return len(self) }
+func (self List) Swap(a, b int) { self[a], self[b] = self[b], self[a] }
+func (self List) Less(a, b int) bool {
+	switch item1 := self[a].(type) {
+	case bool:
+		switch item2 := self[b].(type) {
+			case bool: return (!item1) && item2
+			default: panic(Error{fmt.Sprintf(
+				"Can't compare %T to %T.", item1, item2)})
+		}
+	case int:
+		switch item2 := self[b].(type) {
+			case int: return item1 < item2
+			case float64: return float64(item1) < item2
+			default: panic(Error{fmt.Sprintf(
+				"Can't compare %T to %T.", item1, item2)})
+		}
+	case float64:
+		switch item2 := self[b].(type) {
+			case int: return item1 < float64(item2)
+			case float64: return item1 < item2
+			default: panic(Error{fmt.Sprintf(
+				"Can't compare %T to %T.", item1, item2)})
+		}
+	case string:
+		switch item2 := self[b].(type) {
+			case string: return item1 < item2
+			default: panic(Error{fmt.Sprintf(
+				"Can't compare %T to %T.", item1, item2)})
+		}
+	default:
+		panic(Error{fmt.Sprintf(
+			"No comparisons defined on %T.", item1)})
+	}
+}
+
 func (self *Scope) Get(name string) (interface{}, error) {
 	if value, ok := self.Names[name]; ok {
 		return value, nil
@@ -516,6 +552,21 @@ var Procedures = map[string]Builtin {
 	}},
 	"hypot": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return math.Hypot(ParseFloat(a[0]), ParseFloat(a[1])), nil
+	}},
+	
+	"min": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		if List(a).Less(0, 1) {
+			return a[0], nil
+		} else {
+			return a[1], nil
+		}
+	}},
+	"max": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		if List(a).Less(0, 1) {
+			return a[1], nil
+		} else {
+			return a[0], nil
+		}
 	}},
 
 	"lowercase": {1,
