@@ -1,0 +1,17 @@
+print [Welcome to Lunar Logo. Enter your commands, or BYE to quit.]
+while [true] do
+	type >
+	type space
+	make cmd readline
+	if eq 0 count :cmd do
+		continue
+	end
+	if eq bye lowercase first :cmd do
+		break
+	end
+	foreach i results parse :cmd do
+		if neq :i nil do
+			show :i
+		end
+	end
+end
