@@ -414,8 +414,8 @@ procedures = {
 	"local": (1, lambda scope, n: local(n, scope)),
 	"localmake": (2, lambda scope, a, b: localmake(a, b, scope)),
 	"thing": (1, lambda scope, n: scope[n.lower()]),
-	"+1": (1, lambda scope, n: plus_one(n, scope)),
-	"-1": (1, lambda scope, n: minus_one(n, scope)),
+	"incr": (1, lambda scope, n: plus_one(n, scope)),
+	"decr": (1, lambda scope, n: minus_one(n, scope)),
 	
 	"if": (2, lambda scope, a, b: do_if(a, b, scope)),
 	"ifelse": (3, lambda scope, a, b, c: do_ifelse(a, b, c, scope)),

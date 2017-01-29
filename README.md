@@ -67,5 +67,3 @@ Status
 As of 26 January 2017, Lunar Logo supports over 100 procedures (you can find the list at the end of `lunar.py`). See the tutorial for an overview.
 
 The software is considered alpha quality. It's been tested and debugged to a degree, and all the essentials should be working correctly, but some features are prone to change, especially error handling. Don't rely too much on them yet.
-
-Known bug: as of 29 January, the variable scoping example is broken.
