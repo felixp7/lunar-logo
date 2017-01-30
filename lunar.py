@@ -276,8 +276,7 @@ def do_iffalse(code, scope):
 
 # Loops.
 def do_while(cond, code, scope):
-	"""While loop; the condition must be a literal list."""
-	cond = parse(cond)
+	"""While loop."""
 	while results(cond, scope)[0]:
 		value = run(code, scope)
 		if scope.returning:
@@ -413,7 +412,8 @@ procedures = {
 	"iftrue": (1, lambda scope, code: do_iftrue(code, scope)),
 	"iffalse": (1, lambda scope, code: do_iffalse(code, scope)),
 	
-	"while": (2, lambda scope, a, b: do_while(a, b, scope)),
+	# The condition must be a literal list.
+	"while": (2, lambda scope, a, b: do_while(parse(a), b, scope)),
 	"for": (5, lambda scope, v, f, t, s, c: do_for(v, f, t, s, c, scope)),
 	"foreach": (3, lambda scope, v, i, c: do_foreach(v, i, c, scope)),
 	

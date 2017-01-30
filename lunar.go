@@ -364,6 +364,28 @@ func Load(fn string, ctx map[string]Builtin, s *Scope) (interface{}, error) {
 	}
 }
 
+// While loop.
+func While(cond, code List, scope *Scope) (interface{}, error) {
+	for {
+		test, err := Results(cond, scope)
+		if err != nil { return nil, err }
+		if !ToBool(test[0]) { return nil, nil }
+		
+		value, err := Run(code, scope)
+		if err != nil {
+			return nil, err
+		} else if scope.returning {
+			return value, nil
+		} else if scope.continuing {
+			scope.continuing = false
+		} else if scope.breaking {
+			scope.breaking = false
+			break
+		}
+	}
+	return nil, nil
+}
+
 // For loop; the variable is always treated as local.
 func For(v string, i, l, p float64, code List, s *Scope) (interface{}, error) {
 	v = strings.ToLower(v)
@@ -399,6 +421,26 @@ func For(v string, i, l, p float64, code List, s *Scope) (interface{}, error) {
 			}
 			i += p
 			s.Names[v] = i
+		}
+	}
+	return nil, nil
+}
+
+// Foreach loop; the variable is always treated as local.
+func Foreach(v string, items, code List, s *Scope) (interface{}, error) {
+	v = strings.ToLower(v)
+	for _, i := range(items) {
+		s.Names[v] = i
+		value, err := Run(code, s)
+		if err != nil {
+			return nil, err
+		} else if s.returning {
+			return value, nil
+		} else if s.continuing {
+			s.continuing = false
+		} else if s.breaking {
+			s.breaking = false
+			break
 		}
 	}
 	return nil, nil
@@ -728,6 +770,29 @@ var Procedures = map[string]Builtin {
 		return s.Get(strings.ToLower(varname))
 	}},
 	
+	"if": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		cond := ToBool(a[0])
+		if code, ok := a[1].(List); ok {
+			if cond {
+				return Run(code, s)
+			} else {
+				return nil, nil
+			}
+		} else {
+			return nil, Error{"If expects a list, got: " +
+				fmt.Sprint(a[1])}
+		}
+	}},
+	"test": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return nil, nil
+	}},
+	"iftrue": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return nil, nil
+	}},
+	"iffalse": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return nil, nil
+	}},
+	
 	"for": {5, func (s *Scope, a ...interface{}) (interface{}, error) {
 		varname := ToString(a[0])
 		init := ParseFloat(a[1])
@@ -735,6 +800,13 @@ var Procedures = map[string]Builtin {
 		step := ParseFloat(a[3])
 		code := a[4].(List)
 		return For(varname, init, limit, step, code, s)
+	}},
+	"foreach": {3,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		varname := ToString(a[0])
+		items := a[1].(List)
+		code := a[2].(List)
+		return Foreach(varname, items, code, s)
 	}},
 	
 	"add": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -809,6 +881,13 @@ var Procedures = map[string]Builtin {
 					return n, nil
 				}
 			case float64: return math.Abs(n), nil
+			default: return math.NaN(), nil
+		}
+	}},
+	"minus": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch n := a[0].(type) {
+			case int: return -n, nil
+			case float64: return -n, nil
 			default: return math.NaN(), nil
 		}
 	}},
@@ -1267,6 +1346,42 @@ func init() {
 		}
 	}
 	Procedures["parse"] = Builtin{1, tmp}
+
+	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
+		// The condition must be a literal list.
+		cond, err := Parse(a[0].([]string), Procedures)
+		code := a[1].(List)
+		if err != nil {
+			return nil, err
+		} else {
+			return While(cond, code, s)
+		}
+	}
+	Procedures["while"] = Builtin{2, tmp}
+
+	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
+		cond := ToBool(a[0])
+		iftrue := a[1].([]string)
+		iffalse := a[2].([]string)
+		if cond {
+			code, err := Parse(iftrue, Procedures)
+			if err != nil {
+				return nil, err
+			} else {
+				res, err := Results(code, s)
+				return res[0], err
+			}
+		} else {
+			code, err := Parse(iffalse, Procedures)
+			if err != nil {
+				return nil, err
+			} else {
+				res, err := Results(code, s)
+				return res[0], err
+			}
+		}
+	}
+	Procedures["ifelse"] = Builtin{3, tmp}
 }
 
 func main() {
