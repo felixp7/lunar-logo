@@ -10,3 +10,6 @@ A: A block of code can contain items of any type, but a literal list contains on
 
 A: Prefix the call to it with `ignore` -- it's a built-in procedure that does exactly what it says on the tin.
 
+**Q: Why are there no increment and decrement operators?**
+
+A: I tried to add a couple, and it just didn't work out. They don't fit in with the rest of the language aesthetically, and encourage the wrong kind of coding style.
