@@ -2,7 +2,7 @@ print [Welcome to Lunar Logo. Enter your commands, or BYE to quit.]
 while [true] do
 	type >
 	type space
-	make cmd readline
+	make cmd readlist
 	if eq 0 count :cmd do
 		continue
 	end
