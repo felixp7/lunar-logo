@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"os"
 	"bufio"
+	"sort"
 	"math"
 	"math/rand"
 	"time"
@@ -583,6 +584,15 @@ func ParseInt(input interface{}) int {
 	}
 }
 
+func StringSlice(input List) []string {
+	if input == nil { return nil }
+	output := make([]string, len(input))
+	for i, val := range(input) {
+		output[i] = ToString(val)
+	}
+	return output
+}
+
 var Procedures = map[string]Builtin {
 	"run": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if code, ok := a[0].(List); ok {
@@ -621,21 +631,43 @@ var Procedures = map[string]Builtin {
 	}},
 	
 	"print": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		fmt.Fprintln(Outs, a[0])
+		switch value := a[0].(type) {
+			case List: fmt.Fprintln(Outs,
+				strings.Join(StringSlice(value), " "))
+			case []string: fmt.Fprintln(Outs,
+				strings.Join(value, " "))
+			default: fmt.Fprintln(Outs, value)
+		}
 		return nil, nil
 	}},
 	"type": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		fmt.Fprint(Outs, a[0])
+		switch value := a[0].(type) {
+			case List: fmt.Fprint(Outs,
+				strings.Join(StringSlice(value), " "))
+			case []string: fmt.Fprint(Outs,
+				strings.Join(value, " "))
+			default: fmt.Fprint(Outs, value)
+		}
 		return nil, nil
 	}},
 	"show": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		fmt.Fprintf(Outs, "%#v\n", a[0])
+		fmt.Fprintln(Outs, a[0])
 		return nil, nil
 	}},
 	
 	"make": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		varname := ToString(a[0])
 		s.Put(strings.ToLower(varname), a[1])
+		return nil, nil
+	}},
+	"local": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch name := a[0].(type) {
+		case []string:
+			for _, i := range(name) {
+				s.Names[strings.ToLower(i)] = nil
+			}
+		default: s.Names[strings.ToLower(ToString(name))] = nil
+		}
 		return nil, nil
 	}},
 	"localmake": {2,
@@ -828,6 +860,23 @@ var Procedures = map[string]Builtin {
 				fmt.Sprint(a[0])}
 		}
 	}},
+	"sorted": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[0].(type) {
+		case List:
+			sorted := List(make([]interface{}, len(seq)))
+			copy(sorted, seq)
+			sort.Sort(sorted)
+			return sorted, nil
+		case []string:
+			sorted := make([]string, len(seq))
+			copy(sorted, seq)
+			sort.Strings(sorted)
+			return sorted, nil
+		default: return nil, Error{
+			"Count expects a list, got: " + fmt.Sprint(a[0])}
+		}
+	}},
 	
 	"list": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return List{a[0], a[1]}, nil
@@ -868,8 +917,33 @@ var Procedures = map[string]Builtin {
 		return splitre.Split(
 			strings.TrimSpace(ToString(a[0])), -1), nil
 	}},
-	"word": {2,
+	"join": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[0].(type) {
+			case List: return strings.Join(
+				StringSlice(seq), " "), nil
+			case []string: return strings.Join(seq, " "), nil
+			default: return nil, Error{
+				"Join expects a list, got: " +
+					fmt.Sprint(seq)}
+		}
+	}},
+	"split-by": {2,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return strings.Split(ToString(a[1]), ToString(a[0])), nil
+	}},
+	"join-by": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[1].(type) {
+			case List: return strings.Join(
+				StringSlice(seq), ToString(a[0])), nil
+			case []string: return strings.Join(
+				seq, ToString(a[0])), nil
+			default: return nil, Error{
+				"Join-by expects a list, got: " +
+					fmt.Sprint(seq)}
+		}
+	}},
+	"word": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return ToString(a[0]) + ToString(a[1]), nil
 	}},
 
