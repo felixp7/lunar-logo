@@ -35,6 +35,8 @@ type Scope struct {
 	continuing bool
 	breaking bool
 	returning bool
+	
+	test *bool
 }
 
 type Builtin struct {
@@ -743,6 +745,30 @@ var Procedures = map[string]Builtin {
 		fmt.Fprintln(Outs, a[0])
 		return nil, nil
 	}},
+
+	"readlist": {0,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		scanner := bufio.NewScanner(Ins)
+		if scanner.Scan() {
+			return splitre.Split(
+				strings.TrimSpace(scanner.Text()), -1), nil
+		} else if err := scanner.Err(); err != nil {
+			return nil, err
+		} else {
+			return "", nil
+		}
+	}},
+	"readword": {0,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		scanner := bufio.NewScanner(Ins)
+		if scanner.Scan() {
+			return scanner.Text(), nil
+		} else if err := scanner.Err(); err != nil {
+			return nil, err
+		} else {
+			return "", nil
+		}
+	}},
 	
 	"make": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		varname := ToString(a[0])
@@ -784,13 +810,26 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 	"test": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		*s.test = ToBool(a[0])
 		return nil, nil
 	}},
 	"iftrue": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		return nil, nil
+		if s.test == nil {
+			return nil, Error{"Iftrue without test."}
+		} else if *s.test {
+			return Run(a[0].(List), s)
+		} else {
+			return nil, nil
+		}
 	}},
 	"iffalse": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		return nil, nil
+		if s.test == nil {
+			return nil, Error{"Iffalse without test."}
+		} else if !*s.test {
+			return Run(a[0].(List), s)
+		} else {
+			return nil, nil
+		}
 	}},
 	
 	"for": {5, func (s *Scope, a ...interface{}) (interface{}, error) {

@@ -397,7 +397,7 @@ procedures = {
 	"type": (1, lambda scope, item: do_type(item)),
 	"show": (1, lambda scope, item: print(item)),
 	
-	"readline": (0, lambda scope: input().split()),
+	"readlist": (0, lambda scope: input().split()),
 	"readword": (0, lambda scope: input()),
 
 	"make": (2, lambda scope, a, b: make(a, b, scope)),
