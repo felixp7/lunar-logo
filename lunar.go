@@ -536,6 +536,36 @@ func Pick(value interface{}) (interface{}, error) {
 	}
 }
 
+func Concat(seq1, seq2 interface{}) (interface{}, error) {
+	switch seq1 := seq1.(type) {
+	case List:
+		switch seq2 := seq2.(type) {
+		case List:
+			cat := List(make([]interface{},
+				len(seq1), len(seq1) + len(seq2)))
+			copy(cat, seq1)
+			cat = append(cat, seq2...)
+			return cat, nil
+		default: return nil, Error{
+			fmt.Sprintf("Can't concat list and %T.", seq2)}
+		}
+	case []string:
+		switch seq2 := seq2.(type) {
+		case []string:
+			cat := make([]string,
+				len(seq1), len(seq1) + len(seq2))
+			copy(cat, seq1)
+			cat = append(cat, seq2...)
+			return cat, nil
+		default: return nil, Error{
+			fmt.Sprintf("Can't concat list and %T.", seq2)}
+		}
+	default:
+		return nil, Error{
+			fmt.Sprintf("Can't concat %T and %T.", seq1, seq2)}
+	}
+}
+
 func ToBool(input interface{}) bool {
 	switch input := input.(type) {
 		case bool: return input
@@ -591,6 +621,23 @@ func StringSlice(input List) []string {
 		output[i] = ToString(val)
 	}
 	return output
+}
+
+// NewDict returns a new dictionary off a list of alternating keys and values.
+func NewDict(init List) Dict {
+	dictionary := Dict{}
+	i := 0
+	for i < len(init) {
+		key := ToString(init[i])
+		i++
+		if i < len(init) {
+			dictionary[key] = init[i]
+		} else {
+			dictionary[key] = nil
+		}
+		i++
+	}
+	return dictionary
 }
 
 var Procedures = map[string]Builtin {
@@ -881,6 +928,98 @@ var Procedures = map[string]Builtin {
 	"list": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return List{a[0], a[1]}, nil
 	}},
+	"fput": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[1].(type) {
+		case List:
+			ext := List(make([]interface{}, 0, len(seq) + 1))
+			ext = append(ext, a[0])
+			ext = append(ext, seq...)
+			return ext, nil
+		case []string:
+			ext := make([]string, 0, len(seq) + 1)
+			ext = append(ext, ToString(a[0]))
+			ext = append(ext, seq...)
+			return ext, nil
+		default: return nil, Error{
+			"Fput expects a list, got: " + fmt.Sprint(a[1])}
+		}
+	}},
+	"lput": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[1].(type) {
+		case List:
+			ext := List(make([]interface{}, len(seq) + 1))
+			copy(ext, seq)
+			ext[len(ext) -1] = a[0]
+			return ext, nil
+		case []string:
+			ext := make([]string, 0, len(seq) + 1)
+			copy(ext, seq)
+			ext[len(ext) -1] = ToString(a[0])
+			return ext, nil
+		default: return nil, Error{
+			"Fput expects a list, got: " + fmt.Sprint(a[1])}
+		}
+	}},
+	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[1].(type) {
+			case List: return seq[ParseInt(a[0])], nil
+			case []string: return seq[ParseInt(a[0])], nil
+			default: return nil, Error{
+				"Item expects a list, got: " +
+					fmt.Sprint(a[0])}
+		}
+	}},
+	"iseq": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		init := ParseInt(a[0])
+		limit := ParseInt(a[1])
+		if init <= limit {
+			seq := List(make([]interface{}, 0, limit - init + 1))
+			for i := init; i <= limit; i++ {
+				seq = append(seq, i)
+			}
+			return seq, nil
+		} else {
+			seq := List(make([]interface{}, 0, init - limit + 1))
+			for i := limit; i >= init; i-- {
+				seq = append(seq, i)
+			}
+			return seq, nil
+		}
+	}},
+
+	"concat": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return Concat(a[0], a[1])
+	}},
+	"slice": {3,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		init := ParseInt(a[0])
+		limit := ParseInt(a[1])
+		switch seq := a[2].(type) {
+		case List:
+			if limit < 0 {
+				limit = len(seq) - limit
+			}
+			return seq[init:limit], nil
+		case []string:
+			if limit < 0 {
+				limit = len(seq) - limit
+			}
+			return seq[init:limit], nil
+		default: return nil, Error{
+			"Slice expects a list, got: " + fmt.Sprint(a[2])}
+		}
+	}},
+	"setitem": {3,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[1].(type) {
+			case List: return seq[ParseInt(a[0])], nil
+			case []string: return seq[ParseInt(a[0])], nil
+			default: return nil, Error{
+				"Item expects a list, got: " +
+					fmt.Sprint(a[0])}
+		}
+	}},
 
 	"lowercase": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1030,6 +1169,57 @@ var Procedures = map[string]Builtin {
 	"is-digit": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		return digitre.MatchString(ToString(a[0])), nil
+	}},
+	
+	"dict": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[0].(type) {
+			case List: return NewDict(seq), nil
+			default: return nil, Error{
+				"Dict expects a list, got: " +
+					fmt.Sprint(seq)}
+		}
+	}},
+	"get": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		if dict, ok := a[0].(Dict); ok {
+			return dict[ToString(a[1])], nil
+		} else {
+			return  nil, Error{
+				"Get expects a dictionary, got: " +
+					fmt.Sprint(a[0])}
+		}
+	}},
+	"put": {3, func (s *Scope, a ...interface{}) (interface{}, error) {
+		if dict, ok := a[0].(Dict); ok {
+			dict[ToString(a[1])] = a[2]
+			return nil, nil
+		} else {
+			return  nil, Error{
+				"Put expects a dictionary, got: " +
+					fmt.Sprint(a[0])}
+		}
+	}},
+	"del": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		if dict, ok := a[0].(Dict); ok {
+			delete(dict, ToString(a[1]))
+			return nil, nil
+		} else {
+			return  nil, Error{
+				"Del expects a dictionary, got: " +
+					fmt.Sprint(a[0])}
+		}
+	}},
+	"keys": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		if dict, ok := a[0].(Dict); ok {
+			keys := make([]string, 0, len(dict))
+			for i := range(dict) {
+				keys = append(keys, i)
+			}
+			return keys, nil
+		} else {
+			return  nil, Error{
+				"Keys expects a dictionary, got: " +
+					fmt.Sprint(a[0])}
+		}
 	}},
 
 	"rnd": {0, func (s *Scope, a ...interface{}) (interface{}, error) {

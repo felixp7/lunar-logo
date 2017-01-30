@@ -359,7 +359,7 @@ def setitem(idx, seq, value):
 	seq[idx] = value
 
 # Dictionaries.
-def do_dict(init, scope):
+def do_dict(init):
 	"""Return new dictionary off a list of alternating keys and values."""
 	dictionary = {}
 	i = 0
@@ -511,7 +511,7 @@ procedures = {
 	"is-alnum": (1, lambda scope, n: type(n) == str and n.isalnum()),
 	"is-digit": (1, lambda scope, n: type(n) == str and n.isdigit()),
 	
-	"dict": (1, lambda scope, init: do_dict(init, scope)),
+	"dict": (1, lambda scope, init: do_dict(init)),
 	"get": (2, lambda scope, d, k: d[k]),
 	"put": (3, lambda scope, d, k, v: put(d, k, v)),
 	"del": (2, lambda scope, d, k: do_del(d, k)),
