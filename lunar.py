@@ -432,7 +432,7 @@ procedures = {
 	"pow": (2, lambda scope, a, b: a ** b),
 	"minus": (1, lambda scope, n: - n),
 	"abs": (1, lambda scope, n: abs(n)),
-	"int": (1, lambda scope, n: int(n)),
+	"int": (1, lambda scope, n: math.trunc(n)),
 	
 	"pi": (0, lambda scope: math.pi),
 	"sqrt": (1, lambda scope, n: math.sqrt(n)),

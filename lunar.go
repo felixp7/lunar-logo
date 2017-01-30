@@ -9,6 +9,7 @@ import (
 	"os"
 	"bufio"
 	"math"
+	"math/rand"
 	"time"
 )
 
@@ -18,6 +19,10 @@ var Errs = os.Stderr
 
 var intre = regexp.MustCompile(`^-?[[:digit:]]+$`)
 var splitre = regexp.MustCompile(`[[:space:]]+`)
+var spacere = regexp.MustCompile(`^[[:space:]]+$`)
+var digitre = regexp.MustCompile(`^[[:digit:]]+$`)
+var alphare = regexp.MustCompile(`^[[:alpha:]]+$`)
+var alnumre = regexp.MustCompile(`^[[:alnum:]]+$`)
 
 type List []interface{}
 type Dict map[string]interface{}
@@ -450,6 +455,86 @@ func Last(value interface{}) (interface{}, error) {
 	}
 }
 
+func ButFirst(value interface{}) (interface{}, error) {
+	switch seq := value.(type) {
+	case List:
+		if len(seq) > 0 {
+			return seq[1:], nil
+		} else {
+			return nil, Error{"ButFirst got an empty list."}
+		}
+	case []string:
+		if len(seq) > 0 {
+			return seq[1:], nil
+		} else {
+			return nil, Error{"ButFirst got empty literal list."}
+		}
+	case string:
+		if len(seq) > 0 {
+			return seq[1:], nil
+		} else {
+			return nil, Error{"ButFirst got an empty string."}
+		}
+	default:
+		return nil, Error{
+			"ButFirst expects a sequence, got: " +
+				fmt.Sprint(value)}
+	}
+}
+
+func ButLast(value interface{}) (interface{}, error) {
+	switch seq := value.(type) {
+	case List:
+		if len(seq) > 0 {
+			return seq[0:len(seq) - 1], nil
+		} else {
+			return nil, Error{"ButLast got an empty list."}
+		}
+	case []string:
+		if len(seq) > 0 {
+			return seq[0:len(seq) - 1], nil
+		} else {
+			return nil, Error{"ButLast got empty literal list."}
+		}
+	case string:
+		if len(seq) > 0 {
+			return seq[0:len(seq) - 1], nil
+		} else {
+			return nil, Error{"ButLast got an empty string."}
+		}
+	default:
+		return nil, Error{
+			"ButLast expects a sequence, got: " +
+				fmt.Sprint(value)}
+	}
+}
+
+func Pick(value interface{}) (interface{}, error) {
+	switch seq := value.(type) {
+	case List:
+		if len(seq) > 0 {
+			return seq[rand.Intn(len(seq))], nil
+		} else {
+			return nil, Error{"Pick got an empty list."}
+		}
+	case []string:
+		if len(seq) > 0 {
+			return seq[rand.Intn(len(seq))], nil
+		} else {
+			return nil, Error{"Pick got empty literal list."}
+		}
+	case string:
+		if len(seq) > 0 {
+			return seq[rand.Intn(len(seq))], nil
+		} else {
+			return nil, Error{"Pick got an empty string."}
+		}
+	default:
+		return nil, Error{
+			"Pick expects a sequence, got: " + fmt.Sprint(value)}
+	}
+}
+
 func ToBool(input interface{}) bool {
 	switch input := input.(type) {
 		case bool: return input
@@ -519,6 +604,20 @@ var Procedures = map[string]Builtin {
 	}},
 	"ignore": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return nil, nil
+	}},
+
+	"break": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		s.breaking = true
+		return nil, nil
+	}},
+	"continue": {0,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		s.continuing = true
+		return nil, nil
+	}},
+	"return": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		s.returning = true
+		return a[0], nil
 	}},
 	
 	"print": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -622,6 +721,21 @@ var Procedures = map[string]Builtin {
 	"pow": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return math.Pow(ParseFloat(a[0]), ParseFloat(a[1])), nil
 	}},
+	"abs": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch n := a[0].(type) {
+			case int:
+				if n < 1 {
+					return -n, nil
+				} else {
+					return n, nil
+				}
+			case float64: return math.Abs(n), nil
+			default: return math.NaN(), nil
+		}
+	}},
+	"int": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return int(math.Trunc(ParseFloat(a[0]))), nil
+	}},
 
 	"pi": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return math.Pi, nil
@@ -634,6 +748,12 @@ var Procedures = map[string]Builtin {
 	}},
 	"cos": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return math.Cos(ParseFloat(a[0])), nil
+	}},
+	"rad": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ParseFloat(a[0]) * (math.Pi / 180), nil
+	}},
+	"deg": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ParseFloat(a[0]) * (180 / math.Pi), nil
 	}},
 	"hypot": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return math.Hypot(ParseFloat(a[0]), ParseFloat(a[1])), nil
@@ -688,6 +808,29 @@ var Procedures = map[string]Builtin {
 	}},
 	"last": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return Last(a[0])
+	}},
+	"butfirst": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ButFirst(a[0])
+	}},
+	"butlast": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return ButLast(a[0])
+	}},
+	"count": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch seq := a[0].(type) {
+			case List: return len(seq), nil
+			case []string: return len(seq), nil
+			case string: return len(seq), nil
+			default: return nil, Error{
+				"Count expects a sequence, got: " +
+				fmt.Sprint(a[0])}
+		}
+	}},
+	
+	"list": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return List{a[0], a[1]}, nil
 	}},
 
 	"lowercase": {1,
@@ -754,6 +897,84 @@ var Procedures = map[string]Builtin {
 		return ParseFloat(a[0]), nil
 	}},
 
+	"is-string": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(string)
+		return ok, nil
+	}},
+	"is-bool": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(bool)
+		return ok, nil
+	}},
+	"is-int": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(int)
+		return ok, nil
+	}},
+	"is-float": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(float64)
+		return ok, nil
+	}},
+	"is-list": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch a[0].(type) {
+			case List: return true, nil
+			case []string: return true, nil
+			default: return false, nil
+		}
+	}},
+	"is-dict": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(Dict)
+		return ok, nil
+	}},
+	"is-fn": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(Closure)
+		return ok, nil
+	}},
+	"is-proc": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		_, ok := a[0].(Builtin)
+		return ok, nil
+	}},
+
+	"is-space": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return spacere.MatchString(ToString(a[0])), nil
+	}},
+	"is-alpha": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return alphare.MatchString(ToString(a[0])), nil
+	}},
+	"is-alnum": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return alnumre.MatchString(ToString(a[0])), nil
+	}},
+	"is-digit": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return digitre.MatchString(ToString(a[0])), nil
+	}},
+
+	"rnd": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return rand.Float64(), nil
+	}},
+	"random": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		low := ParseInt(a[0])
+		high := ParseInt(a[1])
+		return rand.Intn(high - low + 1) + low, nil
+	}},
+	"rerandom": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		rand.Seed(int64(ParseFloat(a[0])))
+		return nil, nil
+	}},
+	"pick": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return Pick(a[0])
+	}},
+
 	"timer": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return float64(
 			time.Now().UnixNano()) / (1000 * 1000 * 1000), nil
@@ -804,9 +1025,9 @@ func main() {
 		} 
 	} else {
 		fmt.Println("Lunar Logo alpha release, 2017-01-29")
+		fmt.Printf("Compiled with %d procedures.\n", len(Procedures))
+
 		fmt.Println("Usage:\n\tlunar.py [logo code...]")
 		fmt.Println("\tlunar.py load <filename>")
-		
-		fmt.Printf("Compiled with %d procedures.\n", len(Procedures))
 	}
 }
