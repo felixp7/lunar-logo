@@ -242,7 +242,7 @@ func ScanBlock(code List, cursor int) (List, int, error) {
 
 func Parse(words []string, context map[string]Builtin) (List, error) {
 	code := make([]interface{}, 0, len(words))
-	var buf []string = nil
+	var buf List = nil
 	in_list := false
 	for _, i := range(words) {
 		lower := strings.ToLower(i)
@@ -260,9 +260,9 @@ func Parse(words []string, context map[string]Builtin) (List, error) {
 			code = append(code, make(List, 0))
 		} else if strings.HasPrefix(i, "[") {
 			if strings.HasSuffix(i, "]") {
-				code = append(code, []string{i[1:len(i) - 1]})
+				code = append(code, List{i[1:len(i) - 1]})
 			} else {
-				buf = make([]string, 0)
+				buf = List(make([]interface{}, 0))
 				if len(i) > 1 {
 					buf = append(buf, i[1:])
 				}
@@ -368,12 +368,17 @@ func Load(fn string, ctx map[string]Builtin, s *Scope) (interface{}, error) {
 
 func Catch(varname string, code List, scope *Scope) (interface{}, error) {
 	varname = strings.ToLower(varname)
-	scope.Names[varname] = nil
 	value, err := Run(code, scope)
 	if err != nil {
-		scope.Names[varname] = err
+		scope.Names[varname] = err.Error()
+	} else {
+		scope.Names[varname] = nil
 	}
-	return value, nil
+	if scope.returning {
+		return value, nil
+	} else {
+		return nil, nil
+	}
 }
 
 // While loop.
@@ -512,12 +517,6 @@ func First(value interface{}) (interface{}, error) {
 		} else {
 			return nil, Error{"First got an empty list."}
 		}
-	case []string:
-		if len(seq) > 0 {
-			return seq[0], nil
-		} else {
-			return nil, Error{"First got empty literal list."}
-		}
 	case string:
 		if len(seq) > 0 {
 			return seq[0], nil
@@ -538,12 +537,6 @@ func Last(value interface{}) (interface{}, error) {
 		} else {
 			return nil, Error{"Last got an empty list."}
 		}
-	case []string:
-		if len(seq) > 0 {
-			return seq[len(seq) - 1], nil
-		} else {
-			return nil, Error{"Last got empty literal list."}
-		}
 	case string:
 		if len(seq) > 0 {
 			return seq[len(seq) - 1], nil
@@ -563,12 +556,6 @@ func ButFirst(value interface{}) (interface{}, error) {
 			return seq[1:], nil
 		} else {
 			return nil, Error{"ButFirst got an empty list."}
-		}
-	case []string:
-		if len(seq) > 0 {
-			return seq[1:], nil
-		} else {
-			return nil, Error{"ButFirst got empty literal list."}
 		}
 	case string:
 		if len(seq) > 0 {
@@ -591,12 +578,6 @@ func ButLast(value interface{}) (interface{}, error) {
 		} else {
 			return nil, Error{"ButLast got an empty list."}
 		}
-	case []string:
-		if len(seq) > 0 {
-			return seq[0:len(seq) - 1], nil
-		} else {
-			return nil, Error{"ButLast got empty literal list."}
-		}
 	case string:
 		if len(seq) > 0 {
 			return seq[0:len(seq) - 1], nil
@@ -617,12 +598,6 @@ func Pick(value interface{}) (interface{}, error) {
 			return seq[rand.Intn(len(seq))], nil
 		} else {
 			return nil, Error{"Pick got an empty list."}
-		}
-	case []string:
-		if len(seq) > 0 {
-			return seq[rand.Intn(len(seq))], nil
-		} else {
-			return nil, Error{"Pick got empty literal list."}
 		}
 	case string:
 		if len(seq) > 0 {
@@ -649,17 +624,6 @@ func Concat(seq1, seq2 interface{}) (interface{}, error) {
 		default: return nil, Error{
 			fmt.Sprintf("Can't concat list and %T.", seq2)}
 		}
-	case []string:
-		switch seq2 := seq2.(type) {
-		case []string:
-			cat := make([]string,
-				len(seq1), len(seq1) + len(seq2))
-			copy(cat, seq1)
-			cat = append(cat, seq2...)
-			return cat, nil
-		default: return nil, Error{
-			fmt.Sprintf("Can't concat list and %T.", seq2)}
-		}
 	default:
 		return nil, Error{
 			fmt.Sprintf("Can't concat %T and %T.", seq1, seq2)}
@@ -667,6 +631,7 @@ func Concat(seq1, seq2 interface{}) (interface{}, error) {
 }
 
 func ToBool(input interface{}) bool {
+	if input == nil { return false }
 	switch input := input.(type) {
 		case bool: return input
 		case int: return input != 0
@@ -723,6 +688,15 @@ func StringSlice(input List) []string {
 	return output
 }
 
+func StringList(input []string) List {
+	if input == nil { return nil }
+	output := List(make([]interface{}, len(input)))
+	for i, val := range(input) {
+		output[i] = val
+	}
+	return output
+}
+
 // NewDict returns a new dictionary off a list of alternating keys and values.
 func NewDict(init List) Dict {
 	dictionary := Dict{}
@@ -768,6 +742,7 @@ var Procedures = map[string]Builtin {
 	}},
 	
 	"catch": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		fmt.Sprint("Trying to catch")
 		code := a[1].(List)
 		return Catch(ToString(a[0]), code, s)
 	}},
@@ -793,8 +768,6 @@ var Procedures = map[string]Builtin {
 		switch value := a[0].(type) {
 			case List: fmt.Fprintln(Outs,
 				strings.Join(StringSlice(value), " "))
-			case []string: fmt.Fprintln(Outs,
-				strings.Join(value, " "))
 			default: fmt.Fprintln(Outs, value)
 		}
 		return nil, nil
@@ -803,8 +776,6 @@ var Procedures = map[string]Builtin {
 		switch value := a[0].(type) {
 			case List: fmt.Fprint(Outs,
 				strings.Join(StringSlice(value), " "))
-			case []string: fmt.Fprint(Outs,
-				strings.Join(value, " "))
 			default: fmt.Fprint(Outs, value)
 		}
 		return nil, nil
@@ -818,12 +789,14 @@ var Procedures = map[string]Builtin {
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		scanner := bufio.NewScanner(Ins)
 		if scanner.Scan() {
-			return splitre.Split(
-				strings.TrimSpace(scanner.Text()), -1), nil
+			trim := strings.TrimSpace(scanner.Text())
+			if len(trim) == 0 { return List{}, nil }
+			split := splitre.Split(trim, -1)
+			return StringList(split), nil
 		} else if err := scanner.Err(); err != nil {
 			return nil, err
 		} else {
-			return "", nil
+			return List{}, nil
 		}
 	}},
 	"readword": {0,
@@ -845,9 +818,10 @@ var Procedures = map[string]Builtin {
 	}},
 	"local": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch name := a[0].(type) {
-		case []string:
+		case List:
 			for _, i := range(name) {
-				s.Names[strings.ToLower(i)] = nil
+				tmp := strings.ToLower(ToString(i))
+				s.Names[tmp] = nil
 			}
 		default: s.Names[strings.ToLower(ToString(name))] = nil
 		}
@@ -878,6 +852,7 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 	"test": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		s.test = new(bool)
 		*s.test = ToBool(a[0])
 		return nil, nil
 	}},
@@ -918,14 +893,14 @@ var Procedures = map[string]Builtin {
 	
 	"function": {3,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		args := a[1].([]string)
+		args := StringSlice(a[1].(List))
 		code := a[2].(List)
 		Function(ToString(a[0]), args, code, s)
 		return nil, nil
 	}},
 	"fn": {2,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		args := a[0].([]string)
+		args := StringSlice(a[0].(List))
 		code := a[1].(List)
 		return Fn(args, code, s), nil
 	}},
@@ -1123,11 +1098,10 @@ var Procedures = map[string]Builtin {
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[0].(type) {
 			case List: return len(seq), nil
-			case []string: return len(seq), nil
 			case string: return len(seq), nil
 			default: return nil, Error{
-				"Count expects a sequence, got: " +
-				fmt.Sprint(a[0])}
+				"Count expects a list or string, got: " +
+				fmt.Sprint(seq)}
 		}
 	}},
 	"sorted": {1,
@@ -1137,11 +1111,6 @@ var Procedures = map[string]Builtin {
 			sorted := List(make([]interface{}, len(seq)))
 			copy(sorted, seq)
 			sort.Sort(sorted)
-			return sorted, nil
-		case []string:
-			sorted := make([]string, len(seq))
-			copy(sorted, seq)
-			sort.Strings(sorted)
 			return sorted, nil
 		default: return nil, Error{
 			"Count expects a list, got: " + fmt.Sprint(a[0])}
@@ -1158,11 +1127,6 @@ var Procedures = map[string]Builtin {
 			ext = append(ext, a[0])
 			ext = append(ext, seq...)
 			return ext, nil
-		case []string:
-			ext := make([]string, 0, len(seq) + 1)
-			ext = append(ext, ToString(a[0]))
-			ext = append(ext, seq...)
-			return ext, nil
 		default: return nil, Error{
 			"Fput expects a list, got: " + fmt.Sprint(a[1])}
 		}
@@ -1174,11 +1138,6 @@ var Procedures = map[string]Builtin {
 			copy(ext, seq)
 			ext[len(ext) -1] = a[0]
 			return ext, nil
-		case []string:
-			ext := make([]string, 0, len(seq) + 1)
-			copy(ext, seq)
-			ext[len(ext) -1] = ToString(a[0])
-			return ext, nil
 		default: return nil, Error{
 			"Fput expects a list, got: " + fmt.Sprint(a[1])}
 		}
@@ -1186,7 +1145,6 @@ var Procedures = map[string]Builtin {
 	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[1].(type) {
 			case List: return seq[ParseInt(a[0])], nil
-			case []string: return seq[ParseInt(a[0])], nil
 			default: return nil, Error{
 				"Item expects a list, got: " +
 					fmt.Sprint(a[0])}
@@ -1224,11 +1182,6 @@ var Procedures = map[string]Builtin {
 				limit = len(seq) - limit
 			}
 			return seq[init:limit], nil
-		case []string:
-			if limit < 0 {
-				limit = len(seq) - limit
-			}
-			return seq[init:limit], nil
 		default: return nil, Error{
 			"Slice expects a list, got: " + fmt.Sprint(a[2])}
 		}
@@ -1237,7 +1190,6 @@ var Procedures = map[string]Builtin {
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[1].(type) {
 			case List: return seq[ParseInt(a[0])], nil
-			case []string: return seq[ParseInt(a[0])], nil
 			default: return nil, Error{
 				"Item expects a list, got: " +
 					fmt.Sprint(a[0])}
@@ -1283,7 +1235,6 @@ var Procedures = map[string]Builtin {
 		switch seq := a[0].(type) {
 			case List: return strings.Join(
 				StringSlice(seq), " "), nil
-			case []string: return strings.Join(seq, " "), nil
 			default: return nil, Error{
 				"Join expects a list, got: " +
 					fmt.Sprint(seq)}
@@ -1296,13 +1247,10 @@ var Procedures = map[string]Builtin {
 	"join-by": {2,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[1].(type) {
-			case List: return strings.Join(
-				StringSlice(seq), ToString(a[0])), nil
-			case []string: return strings.Join(
-				seq, ToString(a[0])), nil
-			default: return nil, Error{
-				"Join-by expects a list, got: " +
-					fmt.Sprint(seq)}
+		case List: return strings.Join(
+			StringSlice(seq), ToString(a[0])), nil
+		default: return nil, Error{
+			"Join-by expects a list, got: " + fmt.Sprint(seq)}
 		}
 	}},
 	"word": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1357,7 +1305,6 @@ var Procedures = map[string]Builtin {
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch a[0].(type) {
 			case List: return true, nil
-			case []string: return true, nil
 			default: return false, nil
 		}
 	}},
@@ -1375,6 +1322,10 @@ var Procedures = map[string]Builtin {
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		_, ok := a[0].(Builtin)
 		return ok, nil
+	}},
+	"is-nil": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return a[0] == nil, nil
 	}},
 
 	"is-space": {1,
@@ -1433,7 +1384,7 @@ var Procedures = map[string]Builtin {
 	}},
 	"keys": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if dict, ok := a[0].(Dict); ok {
-			keys := make([]string, 0, len(dict))
+			keys := List(make([]interface{}, 0, len(dict)))
 			for i := range(dict) {
 				keys = append(keys, i)
 			}
@@ -1470,19 +1421,13 @@ var Procedures = map[string]Builtin {
 
 func init() {
 	tmp := func (s *Scope, a ...interface{}) (interface{}, error) {
-		if filename, ok := a[0].(string); ok {
-			return Load(filename, Procedures, s)
-		} else {
-			return nil, Error{
-				"Filename should be string in load, found: " +
-				fmt.Sprint(a[0])}
-		}
+		return Load(ToString(a[0]), Procedures, s)
 	}
 	Procedures["load"] = Builtin{1, tmp}
 
 	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
-		if words, ok := a[0].([]string); ok {
-			return Parse(words, Procedures)
+		if words, ok := a[0].(List); ok {
+			return Parse(StringSlice(words), Procedures)
 		} else {
 			return nil, Error{
 				"Parse expects a list of strings, found: " +
@@ -1493,22 +1438,23 @@ func init() {
 
 	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
 		// The condition must be a literal list.
-		cond, err := Parse(a[0].([]string), Procedures)
+		cond := a[0].(List)
 		code := a[1].(List)
+		pcond, err := Parse(StringSlice(cond), Procedures)
 		if err != nil {
 			return nil, err
 		} else {
-			return While(cond, code, s)
+			return While(pcond, code, s)
 		}
 	}
 	Procedures["while"] = Builtin{2, tmp}
 
 	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
 		cond := ToBool(a[0])
-		iftrue := a[1].([]string)
-		iffalse := a[2].([]string)
+		iftrue := a[1].(List)
+		iffalse := a[2].(List)
 		if cond {
-			code, err := Parse(iftrue, Procedures)
+			code, err := Parse(StringSlice(iftrue), Procedures)
 			if err != nil {
 				return nil, err
 			} else {
@@ -1516,7 +1462,7 @@ func init() {
 				return res[0], err
 			}
 		} else {
-			code, err := Parse(iffalse, Procedures)
+			code, err := Parse(StringSlice(iffalse), Procedures)
 			if err != nil {
 				return nil, err
 			} else {

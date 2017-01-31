@@ -505,6 +505,7 @@ procedures = {
 	"is-dict": (1, lambda scope, n: type(n) == dict),
 	"is-fn": (1, lambda scope, n: isinstance(n, Closure)),
 	"is-proc": (1, lambda scope, n: n in procedures.values()),
+	"is-nil": (1, lambda scope, n: n == None),
 
 	"is-space": (1, lambda scope, n: type(n) == str and n.isspace()),
 	"is-alpha": (1, lambda scope, n: type(n) == str and n.isalpha()),

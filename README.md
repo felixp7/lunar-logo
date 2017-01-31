@@ -2,7 +2,7 @@ Lunar Logo
 ==========
 
 
-Welcome to Lunar Logo, an experimental scripting language based on Logo and Lua, with a tiny core and very clean syntax, currently implemented as a stand-alone Python module. Example usage:
+Welcome to Lunar Logo, an experimental scripting language based on Logo and Lua, with a tiny core and clean, minimal syntax. Example usage:
 
 	$ ./lunar.py sqrt add mul 3 3 mul 4 4
 	5.0
@@ -21,7 +21,7 @@ That's right, you can type Lunar Logo code at a Bash prompt without escaping it 
 			break
 		end
 		foreach i results parse :cmd do
-			if neq :i nil do
+			if not is-nil :i do
 				show :i
 			end
 		end
@@ -64,6 +64,6 @@ This is the second time I do a Logo dialect. [The first time around][ll] I kept 
 Status
 ------
 
-As of 26 January 2017, Lunar Logo supports over 100 procedures (you can find the list at the end of `lunar.py`). See the tutorial for an overview.
+As of 31 January 2017, Lunar Logo has two implementations that can run all the examples correctly. The language supports over 100 procedures (you can find a concise list at the end of `lunar.py`). See the tutorial for an overview.
 
-The software is considered alpha quality. It's been tested and debugged to a degree, and all the essentials should be working correctly, but some features are prone to change, especially error handling. Don't rely too much on them yet.
+The software is considered alpha quality. Testing has been limited so far, and the feature set is still in flux. Anything mentioned in the tutorial and examples should stay put from now on, though.
