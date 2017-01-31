@@ -248,9 +248,9 @@ def local(varname, scope):
 	"""Declare a local variable, or several in a list."""
 	if type(varname) == list:
 		for i in varname:
-			scope.names[i.lower()] = None
+			scope.names[str(i).lower()] = None
 	else:
-		scope.names[varname.lower()] = None
+		scope.names[str(varname).lower()] = None
 
 # Conditionals.
 def do_if(cond, code, scope):
@@ -400,11 +400,11 @@ procedures = {
 	"readlist": (0, lambda scope: input().split()),
 	"readword": (0, lambda scope: input()),
 
-	"make": (2, lambda scope, a, b: make(a, b, scope)),
+	"make": (2, lambda scope, a, b: make(str(a), b, scope)),
 	#"name": (2, lambda scope, a, b: make(b, a, scope)),
 	"local": (1, lambda scope, n: local(n, scope)),
-	"localmake": (2, lambda scope, a, b: localmake(a, b, scope)),
-	"thing": (1, lambda scope, n: scope[n.lower()]),
+	"localmake": (2, lambda scope, a, b: localmake(str(a), b, scope)),
+	"thing": (1, lambda scope, n: scope[str(n).lower()]),
 	
 	"if": (2, lambda scope, a, b: do_if(a, b, scope)),
 	"ifelse": (3, lambda scope, a, b, c: do_ifelse(a, b, c, scope)),

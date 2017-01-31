@@ -26,7 +26,7 @@ var alphare = regexp.MustCompile(`^[[:alpha:]]+$`)
 var alnumre = regexp.MustCompile(`^[[:alnum:]]+$`)
 
 type List []interface{}
-type Dict map[string]interface{}
+type Dict map[interface{}]interface{}
 
 type Scope struct {
 	Names Dict
@@ -526,7 +526,7 @@ func First(value interface{}) (interface{}, error) {
 		}
 	case string:
 		if len(seq) > 0 {
-			return seq[0], nil
+			return seq[0:1], nil
 		} else {
 			return nil, Error{"First got an empty string."}
 		}
@@ -546,7 +546,7 @@ func Last(value interface{}) (interface{}, error) {
 		}
 	case string:
 		if len(seq) > 0 {
-			return seq[len(seq) - 1], nil
+			return seq[len(seq) - 1:len(seq)], nil
 		} else {
 			return nil, Error{"Last got an empty string."}
 		}
@@ -1187,11 +1187,11 @@ var Procedures = map[string]Builtin {
 			copy(cp, data)
 			return cp, nil
 		case Dict:
-			cp := Dict(make(map[string]interface{}, len(data)))
+			cp := make(map[interface{}]interface{}, len(data))
 			for k, v := range(data) {
 				cp[k] = v
 			}
-			return cp, nil
+			return Dict(cp), nil
 		default: return data, nil
 		}
 	}},
