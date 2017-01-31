@@ -10,7 +10,7 @@ while [true] do
 		break
 	end
 	foreach i results parse :cmd do
-		if not is-nil :i do
+		if neq :i nil do
 			show :i
 		end
 	end
