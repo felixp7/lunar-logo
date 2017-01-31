@@ -6,7 +6,9 @@ While Lunar is definitely a Logo, it's not compatible with older dialects. Progr
 
 - Literal lists can't span lines.
 - You can't quote a word, only a list. But words can be taken literally.
-- Lists are internally implemented as resizable arrays.
+- Lists are internally implemented as dynamic arrays.
+- `setitem` operates on lists, not arrays (which aren't implemented).
+- `array` emits a list, for the same reason.
 - Arithmetic operators are `add`, `sub`, `mul`, `div`; there are no infix versions.
 - Comparison operators are `lt`, `lte`, `eq`, `neq`, `gt`, `gte`; no infix versions here, either.
 - predicate names are prefixed with "is-" instead of suffixed with "p".
@@ -16,6 +18,5 @@ While Lunar is definitely a Logo, it's not compatible with older dialects. Progr
 - There's no template iteration; `foreach` uses an ordinary variable, while `apply`, `map` and `filter` take a function.
 - First-class dictionaries replace property lists, with different accessors.
 - `catch` and `throw` work differently.
-- `setitem` operates on lists, not arrays (which aren't implemented).
 
 Blocks of code are, of course, new to Lunar Logo, and they are used instead of lists in several places.
