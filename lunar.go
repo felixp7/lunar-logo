@@ -366,6 +366,16 @@ func Load(fn string, ctx map[string]Builtin, s *Scope) (interface{}, error) {
 	}
 }
 
+func Catch(varname string, code List, scope *Scope) (interface{}, error) {
+	varname = strings.ToLower(varname)
+	scope.Names[varname] = nil
+	value, err := Run(code, scope)
+	if err != nil {
+		scope.Names[varname] = err
+	}
+	return value, nil
+}
+
 // While loop.
 func While(cond, code List, scope *Scope) (interface{}, error) {
 	for {
@@ -446,6 +456,52 @@ func Foreach(v string, items, code List, s *Scope) (interface{}, error) {
 		}
 	}
 	return nil, nil
+}
+
+// Fn creates a closure over the current scope and returns it.
+func Fn(arglist []string, code List, scope *Scope) Closure {
+	for i, arg := range(arglist) {
+		arglist[i] = strings.ToLower(arg)
+	}
+	return Closure{arglist, code, scope}
+}
+
+// Function defines a named function in the current scope.
+func Function(name string, arglist []string, code List, scope *Scope) {
+	scope.Names[strings.ToLower(name)] = Fn(arglist, code, scope)
+}
+
+// Map maps a user-defined function to the given argument list.
+func Map(closure Closure, args List) (List, error) {
+	results := List(make([]interface{}, len(args)))
+	for i, arg := range(args) {
+		val, err := closure.Apply(arg)
+		if err != nil {
+			return results, err
+		} else {
+			results[i] = val
+		}
+	}
+	return results, nil
+}
+
+// Filter filters the given argument list by a user-defined function.
+func Filter(closure Closure, args List) (List, error) {
+	results := List(make([]interface{}, 0, len(args)))
+	for i, arg := range(args) {
+		val, err := closure.Apply(arg)
+		if err != nil {
+			return results, err
+		} else if val, ok := val.(bool); ok {
+			if val {
+				results[i] = arg
+			}
+		} else {
+			return results, Error{
+				"Filter function returned non-bool."}
+		}
+	}
+	return results, nil
 }
 
 func First(value interface{}) (interface{}, error) {
@@ -704,7 +760,19 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 	"ignore": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		return nil, nil
+		if s.returning {
+			return a[0], nil
+		} else {
+			return nil, nil
+		}
+	}},
+	
+	"catch": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		code := a[1].(List)
+		return Catch(ToString(a[0]), code, s)
+	}},
+	"throw": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return nil, Error{a[0]}
 	}},
 
 	"break": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -846,6 +914,43 @@ var Procedures = map[string]Builtin {
 		items := a[1].(List)
 		code := a[2].(List)
 		return Foreach(varname, items, code, s)
+	}},
+	
+	"function": {3,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		args := a[1].([]string)
+		code := a[2].(List)
+		Function(ToString(a[0]), args, code, s)
+		return nil, nil
+	}},
+	"fn": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		args := a[0].([]string)
+		code := a[1].(List)
+		return Fn(args, code, s), nil
+	}},
+	"apply": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		closure := a[0].(Closure)
+		args := a[1].(List)
+		return closure.Apply(args...)
+	}},
+	"map": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		closure := a[0].(Closure)
+		args := a[1].(List)
+		return Map(closure, args)
+	}},
+	"filter": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		closure := a[0].(Closure)
+		args := a[1].(List)
+		return Filter(closure, args)
+	}},
+	"arity": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		closure := a[0].(Closure)
+		return len(closure.Arglist), nil
 	}},
 	
 	"add": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
