@@ -4,7 +4,7 @@ catch error do
 	sqrt 2
 end
 
-if neq :i nil do
+if neq :error nil do
 	type [Caught error:]
 	type space
 	print :error
@@ -16,7 +16,7 @@ catch error do
 	print [After throwing.]
 end
 
-if neq :i nil do
+if neq :error nil do
 	type [Caught error:]
 	type space
 	print :error
