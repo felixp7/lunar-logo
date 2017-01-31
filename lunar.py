@@ -469,6 +469,8 @@ procedures = {
 	"item": (2, lambda scope, a, b: b[a]),
 	"iseq": (2, lambda scope, a, b: iseq(a, b)),
 	
+	"array": (1, lambda scope, n: [None for i in range(n)]),
+	"copy": (1, lambda scope, n: n.copy()),
 	"concat": (2, lambda scope, a, b: list(a) + list(b)),
 	"slice": (3, lambda scope, a, b, seq: seq[a:b]),
 	"setitem": (3, lambda scope, i, seq, v: setitem(i, seq, v)),

@@ -1175,6 +1175,26 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 
+	"array": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		return List(make([]interface{}, ParseInt(a[0]))), nil
+	}},
+	"copy": {1,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		switch data := a[0].(type) {
+		case List:
+			cp := List(make([]interface{}, len(data)))
+			copy(cp, data)
+			return cp, nil
+		case Dict:
+			cp := Dict(make(map[string]interface{}, len(data)))
+			for k, v := range(data) {
+				cp[k] = v
+			}
+			return cp, nil
+		default: return data, nil
+		}
+	}},
 	"concat": {2,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		return Concat(a[0], a[1])
