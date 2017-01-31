@@ -234,7 +234,7 @@ An error can happen at any time while running a Logo program. By default, that e
 		sqrt 2
 	end
 
-	if neq :error nil do
+	if not is-nil :error do
 		type [Caught error:]
 		type space
 		print :error
@@ -246,7 +246,7 @@ An error can happen at any time while running a Logo program. By default, that e
 		print [After throwing.]
 	end
 
-	if neq :error nil do
+	if not is-nil :error do
 		type [Caught error:]
 		type space
 		print :error
