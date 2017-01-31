@@ -96,6 +96,8 @@ func (self List) Less(a, b int) bool {
 
 // Equal complements sort.Interface to enable all comparison operators.
 func (self List) Equal(a, b int) bool {
+	if self[a] == nil && self[b] == nil { return true }
+	if self[a] == nil || self[b] == nil { return false }
 	switch item1 := self[a].(type) {
 	case int:
 		switch item2 := self[b].(type) {
@@ -368,6 +370,11 @@ func Load(fn string, ctx map[string]Builtin, s *Scope) (interface{}, error) {
 
 func Catch(varname string, code List, scope *Scope) (interface{}, error) {
 	varname = strings.ToLower(varname)
+	defer func () {
+		if err := recover(); err != nil {
+			scope.Names[varname] = fmt.Sprint(err)
+		}
+	}()
 	value, err := Run(code, scope)
 	if err != nil {
 		scope.Names[varname] = err.Error()
@@ -493,13 +500,13 @@ func Map(closure Closure, args List) (List, error) {
 // Filter filters the given argument list by a user-defined function.
 func Filter(closure Closure, args List) (List, error) {
 	results := List(make([]interface{}, 0, len(args)))
-	for i, arg := range(args) {
+	for _, arg := range(args) {
 		val, err := closure.Apply(arg)
 		if err != nil {
 			return results, err
 		} else if val, ok := val.(bool); ok {
 			if val {
-				results[i] = arg
+				results = append(results, arg)
 			}
 		} else {
 			return results, Error{
@@ -643,7 +650,7 @@ func ToBool(input interface{}) bool {
 
 func ToString(input interface{}) string {
 	switch input := input.(type) {
-		case string: return string(input)
+		case string: return input
 		default: return fmt.Sprint(input)
 	}
 }
@@ -1323,10 +1330,6 @@ var Procedures = map[string]Builtin {
 		_, ok := a[0].(Builtin)
 		return ok, nil
 	}},
-	"is-nil": {1,
-	func (s *Scope, a ...interface{}) (interface{}, error) {
-		return a[0] == nil, nil
-	}},
 
 	"is-space": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1476,6 +1479,11 @@ func init() {
 
 func main() {
 	if len(os.Args) > 1 {
+		defer func () {
+			if err := recover(); err != nil {
+				fmt.Println(err)
+			}
+		}()
 		toplevel := Scope{Names: Dict{}}
 		code, err := Parse(os.Args[1:], Procedures)
 		if err == nil {
@@ -1493,7 +1501,7 @@ func main() {
 			fmt.Fprintln(Errs, err)
 		} 
 	} else {
-		fmt.Println("Lunar Logo alpha release, 2017-01-29")
+		fmt.Println("Lunar Logo alpha release, 2017-01-31")
 		fmt.Printf("Compiled with %d procedures.\n", len(Procedures))
 
 		fmt.Println("Usage:\n\tlunar.py [logo code...]")

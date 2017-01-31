@@ -505,7 +505,6 @@ procedures = {
 	"is-dict": (1, lambda scope, n: type(n) == dict),
 	"is-fn": (1, lambda scope, n: isinstance(n, Closure)),
 	"is-proc": (1, lambda scope, n: n in procedures.values()),
-	"is-nil": (1, lambda scope, n: n == None),
 
 	"is-space": (1, lambda scope, n: type(n) == str and n.isspace()),
 	"is-alpha": (1, lambda scope, n: type(n) == str and n.isalpha()),
@@ -538,6 +537,6 @@ if __name__ == "__main__":
 		except Exception as e:
 			print(e, file=sys.stderr)
 	else:
-		print("Lunar Logo alpha release, 2017-01-29")
+		print("Lunar Logo alpha release, 2017-01-31")
 		print("Usage:\n\tlunar.py [logo code...]")
 		print("\tlunar.py load <filename>")

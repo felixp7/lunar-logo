@@ -21,7 +21,7 @@ That's right, you can type Lunar Logo code at a Bash prompt without escaping it 
 			break
 		end
 		foreach i results parse :cmd do
-			if not is-nil :i do
+			if neq :i nil do
 				show :i
 			end
 		end
