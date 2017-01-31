@@ -346,6 +346,14 @@ def do_filter(closure, args):
 	"""Filter the given argument list by a user-defined function."""
 	return [i for i in args if closure([i])]
 
+def arity(proc):
+	if isinstance(proc, Closure):
+		return len(proc.arglist)
+	elif proc in procedures.values():
+		return proc[0]
+	else:
+		raise "Arity expects fn or procedure, got: " + str(proc)
+
 # Lists.
 def iseq(init, limit):
 	"""Return a sequential list of integers from init to limit."""
@@ -422,7 +430,7 @@ procedures = {
 	"apply": (2, lambda scope, f, a: f(a)),
 	"map": (2, lambda scope, f, a: do_map(f, a)),
 	"filter": (2, lambda scope, f, a: do_filter(f, a)),
-	"arity": (1, lambda scope, f: len(f.arglist)),
+	"arity": (1, lambda scope, f: arity(f)),
 	
 	"add": (2, lambda scope, a, b: a + b),
 	"sub": (2, lambda scope, a, b: a - b),

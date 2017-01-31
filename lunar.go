@@ -29,7 +29,7 @@ type List []interface{}
 type Dict map[interface{}]interface{}
 
 type Scope struct {
-	Names Dict
+	Names map[string]interface{}
 	Parent *Scope
 	
 	continuing bool
@@ -149,7 +149,7 @@ func (self *Scope) Put(name string, value interface{}) {
 }
 
 func (self *Closure) Apply(args ...interface{})  (interface{}, error) {
-	locals := Scope{Names: Dict{}, Parent: self.Scope}
+	locals := Scope{Names: map[string]interface{}{}, Parent: self.Scope}
 	if len(self.Arglist) != len(args) {
 		return nil, Error{fmt.Sprintf(
 			"%d arguments passed to function expecting %d.",
@@ -931,8 +931,13 @@ var Procedures = map[string]Builtin {
 	}},
 	"arity": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		closure := a[0].(Closure)
-		return len(closure.Arglist), nil
+		switch proc := a[0].(type) {
+			case Closure: return len(proc.Arglist), nil
+			case Builtin: return proc.Arity, nil
+			default: return nil, Error{
+				"Arity expects fn or procedure, got: " +
+					fmt.Sprint(proc)}
+		}
 	}},
 	
 	"add": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1504,7 +1509,7 @@ func main() {
 				fmt.Println(err)
 			}
 		}()
-		toplevel := Scope{Names: Dict{}}
+		toplevel := Scope{Names: map[string]interface{}{}}
 		code, err := Parse(os.Args[1:], Procedures)
 		if err == nil {
 			results, err2 := Results(code, &toplevel)
