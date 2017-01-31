@@ -1500,6 +1500,15 @@ func init() {
 		}
 	}
 	Procedures["ifelse"] = Builtin{3, tmp}
+
+	tmp = func (s *Scope, a ...interface{}) (interface{}, error) {
+		names := make([]interface{}, 0, len(Procedures))
+		for i := range(Procedures) {
+			names = append(names, i)
+		}
+		return List(names), nil
+	}
+	Procedures["procedures"] = Builtin{0, tmp}
 }
 
 func main() {
@@ -1527,8 +1536,6 @@ func main() {
 		} 
 	} else {
 		fmt.Println("Lunar Logo alpha release, 2017-01-31")
-		fmt.Printf("Compiled with %d procedures.\n", len(Procedures))
-
 		fmt.Println("Usage:\n\tlunar.py [logo code...]")
 		fmt.Println("\tlunar.py load <filename>")
 	}

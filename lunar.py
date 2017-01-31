@@ -391,7 +391,6 @@ procedures = {
 	"load": (1, lambda scope, f: load(f, scope)),
 	"ignore": (1, lambda scope, value: None),
 	
-	#"procedures": (0, lambda scope: procedures),
 	#"locals": (0, lambda scope: scope.names),
 
 	"throw": (1, lambda scope, msg: throw(msg)),
@@ -431,6 +430,7 @@ procedures = {
 	"map": (2, lambda scope, f, a: do_map(f, a)),
 	"filter": (2, lambda scope, f, a: do_filter(f, a)),
 	"arity": (1, lambda scope, f: arity(f)),
+	"procedures": (0, lambda scope: procedures.keys()),
 	
 	"add": (2, lambda scope, a, b: a + b),
 	"sub": (2, lambda scope, a, b: a - b),
