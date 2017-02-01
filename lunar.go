@@ -161,6 +161,10 @@ func (self *Closure) Apply(args ...interface{})  (interface{}, error) {
 	return Run(self.Code, &locals)
 }
 
+func (self Closure) String() string {
+	return fmt.Sprintf("fn %v do %v end", self.Arglist, self.Code)
+}
+
 func EvalNext(code List, cursor int, scope *Scope) (interface{}, int, error) {
 	collectArgs := func (num int, msg string) (List, error) {
 		args := make(List, num)
@@ -301,13 +305,15 @@ func Parse(words []string, context map[string]Builtin) (List, error) {
 		}
 	}
 	if in_list {
-		return List(code), Error{"Unclosed list at end of line."}
+		return List(code), Error{
+			"Unclosed list at end of line: " +
+				fmt.Sprint(words)}
 	} else {
 		return List(code), nil
 	}
 }
 
-//Underlies most other control structures.
+// Run underlies most other control structures.
 func Run(code List, scope *Scope) (interface{}, error) {
 	cursor := 0
 	for cursor < len(code) {
@@ -328,7 +334,7 @@ func Run(code List, scope *Scope) (interface{}, error) {
 	return nil, nil
 }
 
-// Underlies while, ifelse and the command line.
+// Results underlies while, ifelse and the command line.
 func Results(code List, scope *Scope) (List, error) {
 	values := make([]interface{}, 0, len(code))
 	cursor := 0
@@ -368,6 +374,7 @@ func Load(fn string, ctx map[string]Builtin, s *Scope) (interface{}, error) {
 	}
 }
 
+// Catch runs some code and traps any regular error or panic in a variable.
 func Catch(varname string, code List, scope *Scope) (interface{}, error) {
 	varname = strings.ToLower(varname)
 	defer func () {
@@ -618,23 +625,12 @@ func Pick(value interface{}) (interface{}, error) {
 	}
 }
 
-func Concat(seq1, seq2 interface{}) (interface{}, error) {
-	switch seq1 := seq1.(type) {
-	case List:
-		switch seq2 := seq2.(type) {
-		case List:
-			cat := List(make([]interface{},
-				len(seq1), len(seq1) + len(seq2)))
-			copy(cat, seq1)
-			cat = append(cat, seq2...)
-			return cat, nil
-		default: return nil, Error{
-			fmt.Sprintf("Can't concat list and %T.", seq2)}
-		}
-	default:
-		return nil, Error{
-			fmt.Sprintf("Can't concat %T and %T.", seq1, seq2)}
-	}
+func Concat(seq1, seq2 List) List {
+	cat := List(make([]interface{},
+		len(seq1), len(seq1) + len(seq2)))
+	copy(cat, seq1)
+	cat = append(cat, seq2...)
+	return cat
 }
 
 func ToBool(input interface{}) bool {
@@ -1202,7 +1198,7 @@ var Procedures = map[string]Builtin {
 	}},
 	"concat": {2,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		return Concat(a[0], a[1])
+		return Concat(a[0].(List), a[1].(List)), nil
 	}},
 	"slice": {3,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
