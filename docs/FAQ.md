@@ -13,3 +13,11 @@ A: Prefix the call to it with `ignore` -- it's a built-in procedure that does ex
 **Q: Why are there no increment and decrement operators?**
 
 A: I tried to add a couple, and it just didn't work out. They don't fit in with the rest of the language aesthetically, and encourage the wrong kind of coding style.
+
+**Q: Why is there no `is-nil`?**
+
+A: Because `nil` isn't a data type in Lunar Logo. On the contrary, it denotes the explicit absence of any value that could *have* a type. The right way to test for it is with `eq` or `neq` -- the only comparisons `nil` supports.
+
+**Q: Why is there no `repeat` and `forever`?**
+
+A: Two reasons: they're kind of redundant, and implementing them is an iffy proposition, as Lunar Logo doesn't support any form of template iteration.
