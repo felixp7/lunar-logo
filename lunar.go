@@ -1106,6 +1106,7 @@ var Procedures = map[string]Builtin {
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[0].(type) {
 			case List: return len(seq), nil
+			case Dict: return len(seq), nil
 			case string: return len(seq), nil
 			default: return nil, Error{
 				"Count expects a list or string, got: " +
@@ -1379,7 +1380,7 @@ var Procedures = map[string]Builtin {
 	}},
 	"get": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if dict, ok := a[0].(Dict); ok {
-			return dict[ToString(a[1])], nil
+			return dict[a[1]], nil
 		} else {
 			return  nil, Error{
 				"Get expects a dictionary, got: " +
@@ -1388,7 +1389,7 @@ var Procedures = map[string]Builtin {
 	}},
 	"put": {3, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if dict, ok := a[0].(Dict); ok {
-			dict[ToString(a[1])] = a[2]
+			dict[a[1]] = a[2]
 			return nil, nil
 		} else {
 			return  nil, Error{
