@@ -1407,6 +1407,17 @@ var Procedures = map[string]Builtin {
 					fmt.Sprint(a[0])}
 		}
 	}},
+	"has-key": {2,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		if dict, ok := a[0].(Dict); ok {
+			_, ok := dict[a[1]]
+			return ok, nil
+		} else {
+			return  nil, Error{
+				"Keys expects a dictionary, got: " +
+					fmt.Sprint(a[0])}
+		}
+	}},
 	"keys": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if dict, ok := a[0].(Dict); ok {
 			keys := List(make([]interface{}, 0, len(dict)))

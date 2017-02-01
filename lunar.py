@@ -522,9 +522,10 @@ procedures = {
 	"is-digit": (1, lambda scope, n: type(n) == str and n.isdigit()),
 	
 	"dict": (1, lambda scope, init: do_dict(init)),
-	"get": (2, lambda scope, d, k: d[k]),
+	"get": (2, lambda scope, d, k: d.get(k)),
 	"put": (3, lambda scope, d, k, v: put(d, k, v)),
 	"del": (2, lambda scope, d, k: do_del(d, k)),
+	"has-key": (2, lambda scope, d, k: k in d),
 	"keys": (1, lambda scope, d: d.keys()),
 	
 	"rnd": (0, lambda scope: random.random()),
