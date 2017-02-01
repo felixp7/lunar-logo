@@ -10,6 +10,9 @@ A: A block of code has already been parsed, so it may contain items of any type,
 
 A: Prefix the call to it with `ignore` -- it's a built-in procedure that does exactly what it says on the tin.
 
+Absent features
+---------------
+
 **Q: Why are there no increment and decrement operators?**
 
 A: I tried to add a couple, and it just didn't work out. They don't fit in with the rest of the language aesthetically, and encourage the wrong kind of coding style.
@@ -21,3 +24,10 @@ A: Because `nil` isn't a data type in Lunar Logo. On the contrary, it denotes th
 **Q: Why is there no `repeat` and `forever`?**
 
 A: Two reasons: they're kind of redundant, and implementing them is an iffy proposition, as Lunar Logo doesn't support any form of template iteration.
+
+Interpreter internals
+---------------------
+
+**Q: Is Lunar Logo embeddable?**
+
+A: Definitely! The Python implementation will behave like an ordinary module when imported; for the Go edition, simply remove the supplied `main()` function and optionally rename the package.

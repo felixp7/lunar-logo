@@ -99,6 +99,47 @@ Speaking of lists, there are some tricks I haven't mentioned:
 
 Last but not least, there are two other data types, dictionaries and functions, that can't be parsed directly but can be created with the procedures `dict` and `function`/`fn`, respectively. Blocks of code, too, are evaluated at runtime, after the parsing stage.
 
+Lists and dictionaries
+----------------------
+
+Lists are the fundamental data structure in Lunar Logo. All code is stored internally as lists, and you can also create your own to hold whatever you need, either more code or just plain data:
+
+	make a [1 2 3]
+	make b do 1 2 3 end
+
+The difference is that `:a` will contain character strings, while `:b` will contain integers, because a block is pre-parsed, while a literal list isn't. And there are other ways as well:
+
+- `array 10` will create a list of 10 elements, all `nil` initially (but you can change them with `setitem`).
+- `list <a> <b>` will make a new list with two items it takes as arguments.
+- `split` and `split-by` will make a new list by splitting a string at a separator character.
+- `iseq 1 10` will make a list of integers from 1 to 10.
+- `procedures` will return a list of all the procedure names supplied by the interpreter.
+
+Once created, a list can't change its length anymore, only the content. This is for performance. But you have a variety of ways to slice and dice lists:
+
+- `sorted` returns a sorted copy of the list given as argument;
+- `slice` and its special cases `butfirst`/`butlast` return part of a list;
+- `fput` and `lput` create a new list with another element attached first or last, respectively;
+- for that matter, `first`, `last` and `item` retrieve just one element of a list;
+- last but not least, `concat` makes a new list by sticking two others together.
+
+It should be said that characters strings also behave as lists in many ways, and can be passed to most of these procedures.
+
+To index data by something else than integer indices, especially when you don't know in advance how much you will have, you need a dictionary. Unlike with lists, there's just one way to create them:
+
+	make c dict [key1 value1 key2 value2 key3]
+	
+will evaluate to a dictionary with three elements, the last of them nil. (The initializer list can be empty, but it must be present -- Lunar Logo procedures and functions always take a fixed number of arguments.) Once created, you can manipulate a dictionary with the following procedures:
+
+- `put` sets a key to a new value in the given dictionary.
+- `get` retrives a value by its key from the dictionary.
+- `del` removes the element with given key from a dictionary.
+- `keys` yields a list of all the keys in your dictionary.
+
+You can use numbers, strings or booleans as keys in a dictionary; values can be anything.
+
+To find out the number of elements in either a list or a dictionary, use the `count` procedure. It also works on strings.
+
 Conditionals
 ------------
 
