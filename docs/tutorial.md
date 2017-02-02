@@ -136,7 +136,7 @@ will evaluate to a dictionary with three elements, the last of them nil. (The in
 - `del` removes the element with given key from a dictionary.
 - `keys` yields a list of all the keys in your dictionary.
 
-You can use numbers, strings or booleans as keys in a dictionary; values can be anything.
+You can use numbers, strings or booleans as keys in a dictionary; values can be anything. If a key is absent from the dictionary, `get` will return `nil`; use the standard library function `has-key` to check if it's really there.
 
 To find out the number of elements in either a list or a dictionary, use the `count` procedure. It also works on strings.
 
