@@ -724,7 +724,7 @@ var Procedures = map[string]Builtin {
 		} else {
 			return nil, Error{
 				"Run expects a list, found: " +
-				fmt.Sprint(a[0])}
+					fmt.Sprint(a[0])}
 		}
 	}},
 	"results": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -733,7 +733,7 @@ var Procedures = map[string]Builtin {
 		} else {
 			return nil, Error{
 				"Results expects a list, found: " +
-				fmt.Sprint(a[0])}
+					fmt.Sprint(a[0])}
 		}
 	}},
 	"ignore": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1110,7 +1110,7 @@ var Procedures = map[string]Builtin {
 			case string: return len(seq), nil
 			default: return nil, Error{
 				"Count expects a list or string, got: " +
-				fmt.Sprint(seq)}
+					fmt.Sprint(seq)}
 		}
 	}},
 	"sorted": {1,
@@ -1148,15 +1148,14 @@ var Procedures = map[string]Builtin {
 			ext[len(ext) -1] = a[0]
 			return ext, nil
 		default: return nil, Error{
-			"Fput expects a list, got: " + fmt.Sprint(a[1])}
+			"Lput expects a list, got: " + fmt.Sprint(a[1])}
 		}
 	}},
 	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[1].(type) {
-			case List: return seq[ParseInt(a[0])], nil
-			default: return nil, Error{
-				"Item expects a list, got: " +
-					fmt.Sprint(a[0])}
+		case List: return seq[ParseInt(a[0])], nil
+		default: return nil, Error{
+			"Item expects a list, got: " + fmt.Sprint(a[0])}
 		}
 	}},
 	"iseq": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1170,7 +1169,7 @@ var Procedures = map[string]Builtin {
 			return seq, nil
 		} else {
 			seq := List(make([]interface{}, 0, init - limit + 1))
-			for i := limit; i >= init; i-- {
+			for i := init; i >= limit; i-- {
 				seq = append(seq, i)
 			}
 			return seq, nil
@@ -1218,10 +1217,9 @@ var Procedures = map[string]Builtin {
 	"setitem": {3,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[1].(type) {
-			case List: return seq[ParseInt(a[0])], nil
-			default: return nil, Error{
-				"Item expects a list, got: " +
-					fmt.Sprint(a[0])}
+		case List: return seq[ParseInt(a[0])], nil
+		default: return nil, Error{
+			"Item expects a list, got: " + fmt.Sprint(a[0])}
 		}
 	}},
 
@@ -1262,11 +1260,9 @@ var Procedures = map[string]Builtin {
 	}},
 	"join": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[0].(type) {
-			case List: return strings.Join(
-				StringSlice(seq), " "), nil
-			default: return nil, Error{
-				"Join expects a list, got: " +
-					fmt.Sprint(seq)}
+		case List: return strings.Join(StringSlice(seq), " "), nil
+		default: return nil, Error{
+			"Join expects a list, got: " + fmt.Sprint(seq)}
 		}
 	}},
 	"split-by": {2,
