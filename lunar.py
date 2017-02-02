@@ -525,7 +525,7 @@ procedures = {
 	"get": (2, lambda scope, d, k: d.get(k)),
 	"put": (3, lambda scope, d, k, v: put(d, k, v)),
 	"del": (2, lambda scope, d, k: do_del(d, k)),
-	"has-key": (2, lambda scope, d, k: k in d),
+	#"has-key": (2, lambda scope, d, k: k in d),
 	"keys": (1, lambda scope, d: d.keys()),
 	
 	"rnd": (0, lambda scope: random.random()),

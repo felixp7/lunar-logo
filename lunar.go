@@ -511,13 +511,8 @@ func Filter(closure Closure, args List) (List, error) {
 		val, err := closure.Apply(arg)
 		if err != nil {
 			return results, err
-		} else if val, ok := val.(bool); ok {
-			if val {
-				results = append(results, arg)
-			}
-		} else {
-			return results, Error{
-				"Filter function returned non-bool."}
+		} else if ToBool(val) {
+			results = append(results, arg)
 		}
 	}
 	return results, nil
@@ -705,7 +700,7 @@ func NewDict(init List) Dict {
 	dictionary := Dict{}
 	i := 0
 	for i < len(init) {
-		key := ToString(init[i])
+		key := init[i]
 		i++
 		if i < len(init) {
 			dictionary[key] = init[i]
@@ -1400,17 +1395,6 @@ var Procedures = map[string]Builtin {
 		} else {
 			return  nil, Error{
 				"Del expects a dictionary, got: " +
-					fmt.Sprint(a[0])}
-		}
-	}},
-	"has-key": {2,
-	func (s *Scope, a ...interface{}) (interface{}, error) {
-		if dict, ok := a[0].(Dict); ok {
-			_, ok := dict[a[1]]
-			return ok, nil
-		} else {
-			return  nil, Error{
-				"Keys expects a dictionary, got: " +
 					fmt.Sprint(a[0])}
 		}
 	}},
