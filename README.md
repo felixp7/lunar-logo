@@ -52,7 +52,11 @@ Project goals
 Uses
 ----
 
-Lunar Logo is designed to be used as a command language for driving larger applications. Imagine a command-line parser that can understand any instructions rather than just flags and options!
+You know how modern command line applications have a lot of options, and invocations can become really hairy? For that reason, many of them grow an option to load more options from a file... which of course just complicates things even more.
+
+Lunar Logo solves that problem neatly. Note how in the example above `load` isn't some special command line option, but an ordinary Logo procedure. You just got the aforementioned ability for free!
+
+Of course, now your application is driven by a whole scripting language, and that requires more care. With great power comes great responsibility.
 
 History
 -------

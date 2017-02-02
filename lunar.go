@@ -1323,10 +1323,8 @@ var Procedures = map[string]Builtin {
 	}},
 	"is-list": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch a[0].(type) {
-			case List: return true, nil
-			default: return false, nil
-		}
+		_, ok := a[0].(List)
+		return ok, nil
 	}},
 	"is-dict": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
