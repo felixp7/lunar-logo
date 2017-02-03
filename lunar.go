@@ -395,6 +395,18 @@ func Catch(varname string, code List, scope *Scope) (interface{}, error) {
 	}
 }
 
+// Readword returns a line of input from stdin without any processing.
+func Readword() (string, error) {
+	scanner := bufio.NewScanner(Ins)
+	if scanner.Scan() {
+		return scanner.Text(), nil
+	} else if err := scanner.Err(); err != nil {
+		return "", err
+	} else {
+		return "", Error{"End of input."}
+	}
+}
+
 // While loop.
 func While(cond, code List, scope *Scope) (interface{}, error) {
 	for {
@@ -620,6 +632,10 @@ func Pick(value interface{}) (interface{}, error) {
 	}
 }
 
+func Split(word string) List {
+	return StringList(splitre.Split(strings.TrimSpace(word), -1))
+}
+
 func Concat(seq1, seq2 List) List {
 	cat := List(make([]interface{},
 		len(seq1), len(seq1) + len(seq2)))
@@ -785,28 +801,16 @@ var Procedures = map[string]Builtin {
 
 	"readlist": {0,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		scanner := bufio.NewScanner(Ins)
-		if scanner.Scan() {
-			trim := strings.TrimSpace(scanner.Text())
-			if len(trim) == 0 { return List{}, nil }
-			split := splitre.Split(trim, -1)
-			return StringList(split), nil
-		} else if err := scanner.Err(); err != nil {
-			return nil, err
+		word, err := Readword()
+		if err == nil {
+			return Split(word), nil
 		} else {
-			return List{}, nil
+			return List{}, err
 		}
 	}},
 	"readword": {0,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		scanner := bufio.NewScanner(Ins)
-		if scanner.Scan() {
-			return scanner.Text(), nil
-		} else if err := scanner.Err(); err != nil {
-			return nil, err
-		} else {
-			return "", nil
-		}
+		return Readword()
 	}},
 	
 	"make": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1250,8 +1254,7 @@ var Procedures = map[string]Builtin {
 	}},
 	
 	"split": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		return splitre.Split(
-			strings.TrimSpace(ToString(a[0])), -1), nil
+		return Split(ToString(a[0])), nil
 	}},
 	"join": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[0].(type) {
