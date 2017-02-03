@@ -58,6 +58,10 @@ func (self Error) Error() string {
 	return fmt.Sprint(self.Data)
 }
 
+func FmtError(msg string, data interface{}) Error {
+	return Error{fmt.Sprintf("%s %v", msg, data)}
+}
+
 func (self List) Len() int { return len(self) }
 func (self List) Swap(a, b int) { self[a], self[b] = self[b], self[a] }
 func (self List) Less(a, b int) bool {
@@ -305,9 +309,8 @@ func Parse(words []string, context map[string]Builtin) (List, error) {
 		}
 	}
 	if in_list {
-		return List(code), Error{
-			"Unclosed list at end of line: " +
-				fmt.Sprint(words)}
+		return List(code), FmtError(
+			"Unclosed list at end of line:", words)
 	} else {
 		return List(code), nil
 	}
@@ -325,9 +328,8 @@ func Run(code List, scope *Scope) (interface{}, error) {
 		} else if scope.returning {
 			return value, nil
 		} else if value != nil {
-			return value, Error{
-				"You don't say what to do with: " +
-					fmt.Sprint(value)}
+			return value, FmtError(
+				"You don't say what to do with:", value)
 		}
 		cursor = csr
 	}
@@ -553,8 +555,7 @@ func First(value interface{}) (interface{}, error) {
 			return nil, Error{"First got an empty string."}
 		}
 	default:
-		return nil, Error{
-			"First expects a sequence, got: " + fmt.Sprint(value)}
+		return nil, FmtError("First expects a sequence, got:", value)
 	}
 }
 
@@ -573,8 +574,7 @@ func Last(value interface{}) (interface{}, error) {
 			return nil, Error{"Last got an empty string."}
 		}
 	default:
-		return nil, Error{
-			"Last expects a sequence, got: " + fmt.Sprint(value)}
+		return nil, FmtError("Last expects a sequence, got:", value)
 	}
 }
 
@@ -593,9 +593,8 @@ func ButFirst(value interface{}) (interface{}, error) {
 			return nil, Error{"ButFirst got an empty string."}
 		}
 	default:
-		return nil, Error{
-			"ButFirst expects a sequence, got: " +
-				fmt.Sprint(value)}
+		return nil, FmtError(
+			"ButFirst expects a sequence, got:", value)
 	}
 }
 
@@ -614,9 +613,8 @@ func ButLast(value interface{}) (interface{}, error) {
 			return nil, Error{"ButLast got an empty string."}
 		}
 	default:
-		return nil, Error{
-			"ButLast expects a sequence, got: " +
-				fmt.Sprint(value)}
+		return nil, FmtError(
+			"ButLast expects a sequence, got:", value)
 	}
 }
 
@@ -635,8 +633,7 @@ func Pick(value interface{}) (interface{}, error) {
 			return nil, Error{"Pick got an empty string."}
 		}
 	default:
-		return nil, Error{
-			"Pick expects a sequence, got: " + fmt.Sprint(value)}
+		return nil, FmtError("Pick expects a sequence, got:", value)
 	}
 }
 
@@ -710,7 +707,8 @@ func ParseInt(input interface{}) int {
 			if err == nil {
 				return value
 			} else {
-				return int(math.NaN())
+				panic(Error{fmt.Sprintf(
+					"Can't convert %#v to int.", input)})
 			}
 		default: panic(Error{fmt.Sprintf(
 			"Can't convert %#v to int.", input)})
@@ -757,18 +755,16 @@ var Procedures = map[string]Builtin {
 		if code, ok := a[0].(List); ok {
 			return Run(code, s)
 		} else {
-			return nil, Error{
-				"Run expects a list, found: " +
-					fmt.Sprint(a[0])}
+			return nil, FmtError(
+				"Run expects a list, found:", a[0])
 		}
 	}},
 	"results": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if code, ok := a[0].(List); ok {
 			return Results(code, s)
 		} else {
-			return nil, Error{
-				"Results expects a list, found: " +
-					fmt.Sprint(a[0])}
+			return nil, FmtError(
+				"Results expects a list, found:", a[0])
 		}
 	}},
 	"ignore": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -870,8 +866,7 @@ var Procedures = map[string]Builtin {
 				return nil, nil
 			}
 		} else {
-			return nil, Error{"If expects a list, got: " +
-				fmt.Sprint(a[1])}
+			return nil, FmtError("If expects a list, got:", a[1])
 		}
 	}},
 	"test": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -950,9 +945,8 @@ var Procedures = map[string]Builtin {
 		switch proc := a[0].(type) {
 			case Closure: return len(proc.Arglist), nil
 			case Builtin: return proc.Arity, nil
-			default: return nil, Error{
-				"Arity expects fn or procedure, got: " +
-					fmt.Sprint(proc)}
+			default: return nil, FmtError(
+				"Arity expects fn or procedure, got:", proc)
 		}
 	}},
 	
@@ -1128,9 +1122,8 @@ var Procedures = map[string]Builtin {
 			case List: return len(seq), nil
 			case Dict: return len(seq), nil
 			case string: return len(seq), nil
-			default: return nil, Error{
-				"Count expects a list or string, got: " +
-					fmt.Sprint(seq)}
+			default: return nil, FmtError(
+				"Count expects a list or string, got:", seq)
 		}
 	}},
 	"sorted": {1,
@@ -1141,8 +1134,8 @@ var Procedures = map[string]Builtin {
 			copy(sorted, seq)
 			sort.Sort(sorted)
 			return sorted, nil
-		default: return nil, Error{
-			"Count expects a list, got: " + fmt.Sprint(a[0])}
+		default: return nil, FmtError(
+			"Count expects a list, got:", a[0])
 		}
 	}},
 	
@@ -1156,8 +1149,8 @@ var Procedures = map[string]Builtin {
 			ext = append(ext, a[0])
 			ext = append(ext, seq...)
 			return ext, nil
-		default: return nil, Error{
-			"Fput expects a list, got: " + fmt.Sprint(a[1])}
+		default: return nil, FmtError(
+			"Fput expects a list, got: ", a[1])
 		}
 	}},
 	"lput": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1167,8 +1160,8 @@ var Procedures = map[string]Builtin {
 			copy(ext, seq)
 			ext[len(ext) -1] = a[0]
 			return ext, nil
-		default: return nil, Error{
-			"Lput expects a list, got: " + fmt.Sprint(a[1])}
+		default: return nil, FmtError(
+			"Lput expects a list, got:", a[1])
 		}
 	}},
 	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1184,8 +1177,8 @@ var Procedures = map[string]Builtin {
 				index = len(seq) + index
 			}
 			return seq[index], nil
-		default: return nil, Error{
-			"Item expects a sequence, got: " + fmt.Sprint(a[0])}
+		default: return nil, FmtError(
+			"Item expects a sequence, got:", a[0])
 		}
 	}},
 	"iseq": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1231,8 +1224,8 @@ var Procedures = map[string]Builtin {
 				limit = len(seq) + limit
 			}
 			return seq[init:limit], nil
-		default: return nil, Error{
-			"Slice expects a list, got: " + fmt.Sprint(a[2])}
+		default: return nil, FmtError(
+			"Slice expects a list, got:", a[2])
 		}
 	}},
 	"setitem": {3,
@@ -1245,8 +1238,8 @@ var Procedures = map[string]Builtin {
 			}
 			seq[index] = a[2]
 			return nil, nil
-		default: return nil, Error{
-			"Setitem expects a list, got: " + fmt.Sprint(a[0])}
+		default: return nil, FmtError(
+			"Setitem expects a list, got:", a[0])
 		}
 	}},
 
@@ -1290,8 +1283,8 @@ var Procedures = map[string]Builtin {
 	"join": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[0].(type) {
 		case List: return strings.Join(StringSlice(seq), " "), nil
-		default: return nil, Error{
-			"Join expects a list, got: " + fmt.Sprint(seq)}
+		default: return nil, FmtError(
+			"Join expects a list, got:", seq)
 		}
 	}},
 	"split-by": {2,
@@ -1303,8 +1296,8 @@ var Procedures = map[string]Builtin {
 		switch seq := a[1].(type) {
 		case List: return strings.Join(
 			StringSlice(seq), ToString(a[0])), nil
-		default: return nil, Error{
-			"Join-by expects a list, got: " + fmt.Sprint(seq)}
+		default: return nil, FmtError(
+			"Join-by expects a list, got:", seq)
 		}
 	}},
 	"word": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1396,18 +1389,16 @@ var Procedures = map[string]Builtin {
 	"dict": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[0].(type) {
 			case List: return NewDict(seq), nil
-			default: return nil, Error{
-				"Dict expects a list, got: " +
-					fmt.Sprint(seq)}
+			default: return nil, FmtError(
+				"Dict expects a list, got:", seq)
 		}
 	}},
 	"get": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		if dict, ok := a[0].(Dict); ok {
 			return dict[a[1]], nil
 		} else {
-			return  nil, Error{
-				"Get expects a dictionary, got: " +
-					fmt.Sprint(a[0])}
+			return  nil, FmtError(
+				"Get expects a dictionary, got:", a[0])
 		}
 	}},
 	"put": {3, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1415,9 +1406,8 @@ var Procedures = map[string]Builtin {
 			dict[a[1]] = a[2]
 			return nil, nil
 		} else {
-			return  nil, Error{
-				"Put expects a dictionary, got: " +
-					fmt.Sprint(a[0])}
+			return  nil, FmtError(
+				"Put expects a dictionary, got:", a[0])
 		}
 	}},
 	"del": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1425,9 +1415,8 @@ var Procedures = map[string]Builtin {
 			delete(dict, ToString(a[1]))
 			return nil, nil
 		} else {
-			return  nil, Error{
-				"Del expects a dictionary, got: " +
-					fmt.Sprint(a[0])}
+			return  nil, FmtError(
+				"Del expects a dictionary, got:", a[0])
 		}
 	}},
 	"keys": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1438,9 +1427,8 @@ var Procedures = map[string]Builtin {
 			}
 			return keys, nil
 		} else {
-			return  nil, Error{
-				"Keys expects a dictionary, got: " +
-					fmt.Sprint(a[0])}
+			return  nil, FmtError(
+				"Keys expects a dictionary, got:", a[0])
 		}
 	}},
 
@@ -1477,9 +1465,8 @@ func init() {
 		if words, ok := a[0].(List); ok {
 			return Parse(StringSlice(words), Procedures)
 		} else {
-			return nil, Error{
-				"Parse expects a list of strings, found: " +
-				fmt.Sprint(a[0])}
+			return nil, FmtError(
+				"Parse expects a list, found:", a[0])
 		}
 	}
 	Procedures["parse"] = Builtin{1, tmp}
