@@ -618,6 +618,27 @@ func ButLast(value interface{}) (interface{}, error) {
 	}
 }
 
+func Sorted(seq List) List {
+	sorted := List(make([]interface{}, len(seq)))
+	copy(sorted, seq)
+	sort.Sort(sorted)
+	return sorted
+}
+
+func Fput(item interface{}, seq List) List {
+	ext := List(make([]interface{}, 0, len(seq) + 1))
+	ext = append(ext, item)
+	ext = append(ext, seq...)
+	return ext
+}
+
+func Lput(item interface{}, seq List) List {
+	ext := List(make([]interface{}, len(seq) + 1))
+	copy(ext, seq)
+	ext[len(ext) -1] = item
+	return ext
+}
+
 func Pick(value interface{}) (interface{}, error) {
 	switch seq := value.(type) {
 	case List:
@@ -635,6 +656,13 @@ func Pick(value interface{}) (interface{}, error) {
 	default:
 		return nil, FmtError("Pick expects a sequence, got:", value)
 	}
+}
+
+func SetItem(index int, seq List, item interface{}) {
+	if index < 0 {
+		index = len(seq) + index
+	}
+	seq[index] = item
 }
 
 func Split(word string) List {
@@ -733,6 +761,20 @@ func StringList(input []string) List {
 	return output
 }
 
+func Substring(init, limit int, seq string) string {
+	if limit < 0 {
+		limit = len(seq) + limit
+	}
+	return seq[init:limit]
+}
+
+func Sublist(init, limit int, seq List) List {
+	if limit < 0 {
+		limit = len(seq) + limit
+	}
+	return seq[init:limit]
+}
+
 // NewDict returns a new dictionary off a list of alternating keys and values.
 func NewDict(init List) Dict {
 	dictionary := Dict{}
@@ -748,6 +790,14 @@ func NewDict(init List) Dict {
 		i++
 	}
 	return dictionary
+}
+
+func DictKeys(dict Dict) List {
+	keys := List(make([]interface{}, 0, len(dict)))
+	for i := range(dict) {
+		keys = append(keys, i)
+	}
+	return keys
 }
 
 var Procedures = map[string]Builtin {
@@ -1128,41 +1178,17 @@ var Procedures = map[string]Builtin {
 	}},
 	"sorted": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch seq := a[0].(type) {
-		case List:
-			sorted := List(make([]interface{}, len(seq)))
-			copy(sorted, seq)
-			sort.Sort(sorted)
-			return sorted, nil
-		default: return nil, FmtError(
-			"Count expects a list, got:", a[0])
-		}
+		return Sorted(a[0].(List)), nil
 	}},
 	
 	"list": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return List{a[0], a[1]}, nil
 	}},
 	"fput": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch seq := a[1].(type) {
-		case List:
-			ext := List(make([]interface{}, 0, len(seq) + 1))
-			ext = append(ext, a[0])
-			ext = append(ext, seq...)
-			return ext, nil
-		default: return nil, FmtError(
-			"Fput expects a list, got: ", a[1])
-		}
+		return Fput(a[0], a[1].(List)), nil
 	}},
 	"lput": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch seq := a[1].(type) {
-		case List:
-			ext := List(make([]interface{}, len(seq) + 1))
-			copy(ext, seq)
-			ext[len(ext) -1] = a[0]
-			return ext, nil
-		default: return nil, FmtError(
-			"Lput expects a list, got:", a[1])
-		}
+		return Lput(a[0], a[1].(List)), nil
 	}},
 	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		index := ParseInt(a[0])
@@ -1176,7 +1202,7 @@ var Procedures = map[string]Builtin {
 			if index < 0 {
 				index = len(seq) + index
 			}
-			return seq[index], nil
+			return seq[index:index + 1], nil
 		default: return nil, FmtError(
 			"Item expects a sequence, got:", a[0])
 		}
@@ -1214,33 +1240,18 @@ var Procedures = map[string]Builtin {
 		init := ParseInt(a[0])
 		limit := ParseInt(a[1])
 		switch seq := a[2].(type) {
-		case List:
-			if limit < 0 {
-				limit = len(seq) + limit
-			}
-			return seq[init:limit], nil
-		case string:
-			if limit < 0 {
-				limit = len(seq) + limit
-			}
-			return seq[init:limit], nil
-		default: return nil, FmtError(
-			"Slice expects a list, got:", a[2])
+			case List: return Sublist(init, limit, seq), nil
+			case string: return Substring(init, limit, seq), nil
+			default: return nil, FmtError(
+				"Slice expects a list or string, got:", a[2])
 		}
 	}},
 	"setitem": {3,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		index := ParseInt(a[0])
-		switch seq := a[1].(type) {
-		case List:
-			if index < 0 {
-				index = len(seq) + index
-			}
-			seq[index] = a[2]
-			return nil, nil
-		default: return nil, FmtError(
-			"Setitem expects a list, got:", a[0])
-		}
+		seq := a[1].(List)
+		SetItem(index, seq, a[2])
+		return nil, nil
 	}},
 
 	"lowercase": {1,
@@ -1420,16 +1431,7 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 	"keys": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		if dict, ok := a[0].(Dict); ok {
-			keys := List(make([]interface{}, 0, len(dict)))
-			for i := range(dict) {
-				keys = append(keys, i)
-			}
-			return keys, nil
-		} else {
-			return  nil, FmtError(
-				"Keys expects a dictionary, got:", a[0])
-		}
+		return DictKeys(a[0].(Dict)), nil
 	}},
 
 	"rnd": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
