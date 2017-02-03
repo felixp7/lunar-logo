@@ -58,6 +58,8 @@ Lunar Logo solves that problem neatly. Note how in the example above `load` isn'
 
 Of course, now your application is driven by a whole scripting language, and that requires more care. With great power comes great responsibility.
 
+Other possible uses are as a fancy calculator (much more powerful than `expr`), or for writing Awk-style filters: Lunar Logo should handle TSV files very well indeed.
+
 History
 -------
 

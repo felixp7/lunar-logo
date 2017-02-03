@@ -1172,9 +1172,18 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
+		index := ParseInt(a[0])
 		switch seq := a[1].(type) {
-		case List: return seq[ParseInt(a[0])], nil
-		case string: return seq[ParseInt(a[0])], nil
+		case List:
+			if index < 0 {
+				index = len(seq) + index
+			}
+			return seq[index], nil
+		case string:
+			if index < 0 {
+				index = len(seq) + index
+			}
+			return seq[index], nil
 		default: return nil, Error{
 			"Item expects a sequence, got: " + fmt.Sprint(a[0])}
 		}
@@ -1214,7 +1223,12 @@ var Procedures = map[string]Builtin {
 		switch seq := a[2].(type) {
 		case List:
 			if limit < 0 {
-				limit = len(seq) - limit - 1
+				limit = len(seq) + limit
+			}
+			return seq[init:limit], nil
+		case string:
+			if limit < 0 {
+				limit = len(seq) + limit
 			}
 			return seq[init:limit], nil
 		default: return nil, Error{
@@ -1223,10 +1237,16 @@ var Procedures = map[string]Builtin {
 	}},
 	"setitem": {3,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
+		index := ParseInt(a[0])
 		switch seq := a[1].(type) {
-		case List: return seq[ParseInt(a[0])], nil
+		case List:
+			if index < 0 {
+				index = len(seq) + index
+			}
+			seq[index] = a[2]
+			return nil, nil
 		default: return nil, Error{
-			"Item expects a list, got: " + fmt.Sprint(a[0])}
+			"Setitem expects a list, got: " + fmt.Sprint(a[0])}
 		}
 	}},
 
@@ -1257,7 +1277,10 @@ var Procedures = map[string]Builtin {
 	"tab": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return "\t", nil
 	}},
-	"nl": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+	"cr": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
+		return "\r", nil
+	}},
+	"lf": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return "\n", nil
 	}},
 	

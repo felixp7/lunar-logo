@@ -492,7 +492,8 @@ procedures = {
 	"empty": (0, lambda scope: ""),
 	"space": (0, lambda scope: " "),
 	"tab": (0, lambda scope: "\t"),
-	"nl": (0, lambda scope: "\n"),
+	"cr": (0, lambda scope: "\r"),
+	"lf": (0, lambda scope: "\n"),
 
 	"split": (1, lambda scope, s: s.split()),
 	"join": (1, lambda scope, seq: " ".join(seq)),
