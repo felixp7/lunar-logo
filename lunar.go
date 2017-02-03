@@ -395,6 +395,14 @@ func Catch(varname string, code List, scope *Scope) (interface{}, error) {
 	}
 }
 
+func PrintList(list List) {
+	fmt.Fprintln(Outs, strings.Join(StringSlice(list), " "))
+}
+
+func TypeList(list List) {
+	fmt.Fprint(Outs, strings.Join(StringSlice(list), " "))
+}
+
 // Readword returns a line of input from stdin without any processing.
 func Readword() (string, error) {
 	scanner := bufio.NewScanner(Ins)
@@ -644,6 +652,22 @@ func Concat(seq1, seq2 List) List {
 	return cat
 }
 
+func Iseq(init, limit int) List {
+	if init <= limit {
+		seq := List(make([]interface{}, 0, limit - init + 1))
+		for i := init; i <= limit; i++ {
+			seq = append(seq, i)
+		}
+		return seq
+	} else {
+		seq := List(make([]interface{}, 0, init - limit + 1))
+		for i := init; i >= limit; i-- {
+			seq = append(seq, i)
+		}
+		return seq
+	}
+}
+
 func ToBool(input interface{}) bool {
 	if input == nil { return false }
 	switch input := input.(type) {
@@ -756,7 +780,6 @@ var Procedures = map[string]Builtin {
 	}},
 	
 	"catch": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		fmt.Sprint("Trying to catch")
 		code := a[1].(List)
 		return Catch(ToString(a[0]), code, s)
 	}},
@@ -780,16 +803,14 @@ var Procedures = map[string]Builtin {
 	
 	"print": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch value := a[0].(type) {
-			case List: fmt.Fprintln(Outs,
-				strings.Join(StringSlice(value), " "))
+			case List: PrintList(value)
 			default: fmt.Fprintln(Outs, value)
 		}
 		return nil, nil
 	}},
 	"type": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch value := a[0].(type) {
-			case List: fmt.Fprint(Outs,
-				strings.Join(StringSlice(value), " "))
+			case List: TypeList(value)
 			default: fmt.Fprint(Outs, value)
 		}
 		return nil, nil
@@ -1153,26 +1174,13 @@ var Procedures = map[string]Builtin {
 	"item": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		switch seq := a[1].(type) {
 		case List: return seq[ParseInt(a[0])], nil
+		case string: return seq[ParseInt(a[0])], nil
 		default: return nil, Error{
-			"Item expects a list, got: " + fmt.Sprint(a[0])}
+			"Item expects a sequence, got: " + fmt.Sprint(a[0])}
 		}
 	}},
 	"iseq": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		init := ParseInt(a[0])
-		limit := ParseInt(a[1])
-		if init <= limit {
-			seq := List(make([]interface{}, 0, limit - init + 1))
-			for i := init; i <= limit; i++ {
-				seq = append(seq, i)
-			}
-			return seq, nil
-		} else {
-			seq := List(make([]interface{}, 0, init - limit + 1))
-			for i := init; i >= limit; i-- {
-				seq = append(seq, i)
-			}
-			return seq, nil
-		}
+		return Iseq(ParseInt(a[0]), ParseInt(a[1])), nil
 	}},
 
 	"array": {1,
@@ -1206,7 +1214,7 @@ var Procedures = map[string]Builtin {
 		switch seq := a[2].(type) {
 		case List:
 			if limit < 0 {
-				limit = len(seq) - limit
+				limit = len(seq) - limit - 1
 			}
 			return seq[init:limit], nil
 		default: return nil, Error{
