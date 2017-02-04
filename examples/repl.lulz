@@ -3,6 +3,9 @@ while [true] do
 	type >
 	type space
 	make cmd readlist
+	if eq nil :cmd do
+		break
+	end
 	if eq 0 count :cmd do
 		continue
 	end
