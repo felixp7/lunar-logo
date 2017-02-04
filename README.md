@@ -14,6 +14,9 @@ That's right, you can type Lunar Logo code at a Bash prompt without escaping it 
 		type >
 		type space
 		make cmd readlist
+		if eq nil :cmd do
+			break
+		end
 		if eq 0 count :cmd do
 			continue
 		end

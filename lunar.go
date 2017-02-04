@@ -413,7 +413,7 @@ func Readword() (string, error) {
 	} else if err := scanner.Err(); err != nil {
 		return "", err
 	} else {
-		return "", Error{"End of input."}
+		return "", bufio.ErrFinalToken
 	}
 }
 
@@ -666,7 +666,12 @@ func SetItem(index int, seq List, item interface{}) {
 }
 
 func Split(word string) List {
-	return StringList(splitre.Split(strings.TrimSpace(word), -1))
+	words := splitre.Split(strings.TrimSpace(word), -1)
+	if len(words) == 1 && words[0] == "" {
+		return List{}
+	} else {
+		return StringList(words)
+	}
 }
 
 func Concat(seq1, seq2 List) List {
@@ -866,18 +871,25 @@ var Procedures = map[string]Builtin {
 		return nil, nil
 	}},
 
+	"readword": {0,
+	func (s *Scope, a ...interface{}) (interface{}, error) {
+		word, err := Readword()
+		if err == bufio.ErrFinalToken {
+			return nil, nil
+		} else {
+			return word, err
+		}
+	}},
 	"readlist": {0,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
 		word, err := Readword()
-		if err == nil {
+		if err == bufio.ErrFinalToken {
+			return nil, nil
+		} else if err == nil {
 			return Split(word), nil
 		} else {
 			return List{}, err
 		}
-	}},
-	"readword": {0,
-	func (s *Scope, a ...interface{}) (interface{}, error) {
-		return Readword()
 	}},
 	
 	"make": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
