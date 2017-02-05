@@ -540,6 +540,66 @@ func Filter(closure Closure, args List) (List, error) {
 	return results, nil
 }
 
+// Add adds two numbers, preserving the type if at all possible.
+func Add(a, b interface{}) interface{} {
+	switch t1 := a.(type) {
+	case int:
+		switch t2 := b.(type) {
+			case int: return t1 + t2
+			case float64: return float64(t1) + t2
+			default: return math.NaN()
+		}
+	case float64:
+		switch t2 := b.(type) {
+			case int: return t1 + float64(t2)
+			case float64: return t1 + t2
+			default: return math.NaN()
+		}
+	default:
+		return math.NaN()
+	}
+}
+
+// Sub subtracts two numbers, preserving the type if at all possible.
+func Sub(a, b interface{}) interface{} {
+	switch t1 := a.(type) {
+	case int:
+		switch t2 := b.(type) {
+			case int: return t1 - t2
+			case float64: return float64(t1) - t2
+			default: return math.NaN()
+		}
+	case float64:
+		switch t2 := b.(type) {
+			case int: return t1 - float64(t2)
+			case float64: return t1 - t2
+			default: return math.NaN()
+		}
+	default:
+		return math.NaN()
+	}
+}
+
+// Mul multiplies two numbers, preserving the type if at all possible.
+func Mul(a, b interface{}) interface{} {
+	switch t1 := a.(type) {
+	case int:
+		switch t2 := b.(type) {
+			case int: return t1 * t2
+			case float64: return float64(t1) * t2
+			default: return math.NaN()
+		}
+	case float64:
+		switch t2 := b.(type) {
+			case int: return t1 * float64(t2)
+			case float64: return t1 * t2
+			default: return math.NaN()
+		}
+	default:
+		return math.NaN()
+	}
+}
+
 func First(value interface{}) (interface{}, error) {
 	switch seq := value.(type) {
 	case List:
@@ -671,6 +731,22 @@ func Split(word string) List {
 		return List{}
 	} else {
 		return StringList(words)
+	}
+}
+
+func Copy(a interface{}) interface{} {
+	switch data := a.(type) {
+	case List:
+		cp := List(make([]interface{}, len(data)))
+		copy(cp, data)
+		return cp
+	case Dict:
+		cp := make(map[interface{}]interface{}, len(data))
+		for k, v := range(data) {
+			cp[k] = v
+		}
+		return Dict(cp)
+	default: return data
 	}
 }
 
@@ -1013,58 +1089,13 @@ var Procedures = map[string]Builtin {
 	}},
 	
 	"add": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch t1 := a[0].(type) {
-		case int:
-			switch t2 := a[1].(type) {
-				case int: return t1 + t2, nil
-				case float64: return float64(t1) + t2, nil
-				default: return math.NaN(), nil
-			}
-		case float64:
-			switch t2 := a[1].(type) {
-				case int: return t1 + float64(t2), nil
-				case float64: return t1 + t2, nil
-				default: return math.NaN(), nil
-			}
-		default:
-			return math.NaN(), nil
-		}
+		return Add(a[0], a[1]), nil
 	}},
 	"sub": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch t1 := a[0].(type) {
-		case int:
-			switch t2 := a[1].(type) {
-				case int: return t1 - t2, nil
-				case float64: return float64(t1) - t2, nil
-				default: return math.NaN(), nil
-			}
-		case float64:
-			switch t2 := a[1].(type) {
-				case int: return t1 - float64(t2), nil
-				case float64: return t1 - t2, nil
-				default: return math.NaN(), nil
-			}
-		default:
-			return math.NaN(), nil
-		}
+		return Sub(a[0], a[1]), nil
 	}},
 	"mul": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch t1 := a[0].(type) {
-		case int:
-			switch t2 := a[1].(type) {
-				case int: return t1 * t2, nil
-				case float64: return float64(t1) * t2, nil
-				default: return math.NaN(), nil
-			}
-		case float64:
-			switch t2 := a[1].(type) {
-				case int: return t1 * float64(t2), nil
-				case float64: return t1 * t2, nil
-				default: return math.NaN(), nil
-			}
-		default:
-			return math.NaN(), nil
-		}
+		return Mul(a[0], a[1]), nil
 	}},
 	"div": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
 		return ParseFloat(a[0]) / ParseFloat(a[1]), nil
@@ -1229,19 +1260,7 @@ var Procedures = map[string]Builtin {
 	}},
 	"copy": {1,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
-		switch data := a[0].(type) {
-		case List:
-			cp := List(make([]interface{}, len(data)))
-			copy(cp, data)
-			return cp, nil
-		case Dict:
-			cp := make(map[interface{}]interface{}, len(data))
-			for k, v := range(data) {
-				cp[k] = v
-			}
-			return Dict(cp), nil
-		default: return data, nil
-		}
+		return Copy(a[0]), nil
 	}},
 	"concat": {2,
 	func (s *Scope, a ...interface{}) (interface{}, error) {
