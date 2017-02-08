@@ -709,7 +709,8 @@ func Pick(value interface{}) (interface{}, error) {
 		}
 	case string:
 		if len(seq) > 0 {
-			return seq[rand.Intn(len(seq))], nil
+			pos := rand.Intn(len(seq))
+			return seq[pos:pos + 1], nil
 		} else {
 			return nil, Error{"Pick got an empty string."}
 		}
@@ -1084,7 +1085,7 @@ var Procedures = map[string]Builtin {
 			case Closure: return len(proc.Arglist), nil
 			case Builtin: return proc.Arity, nil
 			default: return nil, FmtError(
-				"Arity expects fn or procedure, got:", proc)
+				"Arity expects fn or procedure, got:", a[0])
 		}
 	}},
 	
@@ -1216,7 +1217,7 @@ var Procedures = map[string]Builtin {
 			case Dict: return len(seq), nil
 			case string: return len(seq), nil
 			default: return nil, FmtError(
-				"Count expects a list or string, got:", seq)
+				"Count expects a list or string, got:", a[0])
 		}
 	}},
 	"sorted": {1,
@@ -1326,7 +1327,7 @@ var Procedures = map[string]Builtin {
 		switch seq := a[0].(type) {
 		case List: return strings.Join(StringSlice(seq), " "), nil
 		default: return nil, FmtError(
-			"Join expects a list, got:", seq)
+			"Join expects a list, got:", a[0])
 		}
 	}},
 	"split-by": {2,
@@ -1339,7 +1340,7 @@ var Procedures = map[string]Builtin {
 		case List: return strings.Join(
 			StringSlice(seq), ToString(a[0])), nil
 		default: return nil, FmtError(
-			"Join-by expects a list, got:", seq)
+			"Join-by expects a list, got:", a[1])
 		}
 	}},
 	"word": {2, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1432,7 +1433,7 @@ var Procedures = map[string]Builtin {
 		switch seq := a[0].(type) {
 			case List: return NewDict(seq), nil
 			default: return nil, FmtError(
-				"Dict expects a list, got:", seq)
+				"Dict expects a list, got:", a[0])
 		}
 	}},
 	"get": {2, func (s *Scope, a ...interface{}) (interface{}, error) {

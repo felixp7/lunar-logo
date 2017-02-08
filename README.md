@@ -63,6 +63,10 @@ Of course, now your application is driven by a whole scripting language, and tha
 
 Other possible uses are as a fancy calculator (much more powerful than `expr`), or for writing Awk-style filters: Lunar Logo should handle TSV files very well indeed.
 
+As of 08 February 2017, Lunar Logo is used to drive [Stereo Imagination][itch], a command-line tool to automate the generation of 3D models.
+
+[itch]: https://notimetoplay.itch.io/stereo-imagination
+
 History
 -------
 
@@ -75,7 +79,7 @@ Status
 
 As of 31 January 2017, Lunar Logo has two implementations that can run all the examples correctly. The language supports over 100 procedures (you can find a concise list at the end of `lunar.py`). See the tutorial for an overview.
 
-The software is considered alpha quality. Testing has been limited so far, and the feature set is still in flux. Anything mentioned in the tutorial and examples should stay put from now on, though.
+The software is considered beta quality. More real-world testing is needed, and the feature set may still change. Anything mentioned in the tutorial and examples should stay put from now on, though.
 
 To Do
 -----
