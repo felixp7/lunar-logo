@@ -1127,7 +1127,11 @@ var Procedures = map[string]Builtin {
 		}
 	}},
 	"int": {1, func (s *Scope, a ...interface{}) (interface{}, error) {
-		return int(math.Trunc(ParseFloat(a[0]))), nil
+		switch n := a[0].(type) {
+			case int: return n, nil
+			case float64: return math.Trunc(n), nil
+			default: return math.NaN(), nil
+		}
 	}},
 
 	"pi": {0, func (s *Scope, a ...interface{}) (interface{}, error) {
@@ -1554,6 +1558,7 @@ func init() {
 
 func main() {
 	if len(os.Args) > 1 {
+		rand.Seed(time.Now().UnixNano())
 		defer func () {
 			if err := recover(); err != nil {
 				fmt.Println(err)
@@ -1576,8 +1581,8 @@ func main() {
 			fmt.Fprintln(Errs, err)
 		} 
 	} else {
-		fmt.Println("Lunar Logo alpha release, 2017-01-31")
-		fmt.Println("Usage:\n\tlunar.py [logo code...]")
-		fmt.Println("\tlunar.py load <filename>")
+		fmt.Println("Lunar Logo beta, 2017-02-09")
+		fmt.Println("Usage:\n\tlunar [logo code...]")
+		fmt.Println("\tlunar load <filename>")
 	}
 }
