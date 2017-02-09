@@ -2,7 +2,7 @@ Lunar Logo Tutorial
 ===================
 
 
-Welcome to Lunar Logo, a modern scripting language with retro sensibilities. Lunar Logo isn't really meant to be used on its own; you're more likely to find it as part of another application. But you can try it out by itself, if only as a fancy calculator with some extra tricks.
+Welcome to Lunar Logo, a modern scripting language with retro sensibilities. Lunar Logo isn't really meant to be used on its own; you're more likely to find it as part of another application. But you can try it out by itself and see what else it can do. (Quite a bit, actually!)
 
 I'll assume you know how to download and run the prototype interpreter `lunar.py`. If not, please refer to the user manual for your Python 3 runtime (you'll need one installed to run Lunar Logo). `lunar.py` is a command-line program, so you'll need to run it from Terminal, Command Prompt, or what have you.
 
@@ -139,6 +139,34 @@ will evaluate to a dictionary with three elements, the last of them nil. (The in
 You can use numbers, strings or booleans as keys in a dictionary; values can be anything. If a key is absent from the dictionary, `get` will return `nil`; use the standard library function `has-key` to check if it's really there.
 
 To find out the number of elements in either a list or a dictionary, use the `count` procedure. It also works on strings.
+
+Strings
+-------
+
+Character strings are also important in Lunar Logo: they're used as names for variables and procedures, for one thing. The simplest form is a plain word: `print Hello...` will output "Hello...", because that doesn't mean anything to the interpreter. You can also get a string by sticking two words together like this: `word cat gut`, or by joining the elements of a list: `join [make list item empty]`; in fact, `print` does just that for you. Another way is to read a line of text from the keyboard with `readword`. (Note that you get a single long string that way; you can use `split readword` to turn it into a list, or `readlist` for short.)
+
+Once you have a string, you can manipulate with procedures such as `lowercase` and `uppercase`, or `trim` / `ltrim` / `rtrim` to remove whitespace from one or both ends. You can also check for a particular prefix or suffix with `starts-with` and `ends-with`, or check what kind of characters it's made of with `is-space`, `is-alpha`, `is-alnum` and `is-digit`. And a few list operations also apply to strings.
+
+Speaking of whitespace, what if you want to output some? You can't simply embed some into a word (except via `join`), because whitespace separates words. That's what `space`, `tab`, `cr` and `lf` are for -- procedures that return the character they're named after. And then there's `empty`, that returns an empty string.
+
+Last but not least, `to-string` can be used to turn any other value into, well, a string. It's one of the few procedures that work on anything.
+
+Math and logic
+--------------
+
+While Lunar Logo isn't really designed for math, it still allows for a decent range of calculations. For one thing, you have the binary operators `add`, `sub`, `mul` and `div` -- also `mod` (modulo, or remainder) and `pow` (raising to power). Unary operators include `minus` (yes, it's spelled out) and `abs`.
+
+On top of these basics, the language is equipped with a small selection of trigonometric operations: `pi` returns the famous constants with 15 decimals; `sqrt`, `sin`, `cos` and `hypot` do what you expect; as for `rad` and `deg`, they convert degrees to radians and the other way around.
+
+But how to *get* numbers? Outside of a literal list, words that look numeric will be parsed an integer or floating point value, as appropriate (and most arithmetic operations will try to preserve the type, for performance). If you have a string though, you must run it through `parse-int` or `parse-float`, as appropriate. Contrast with `int`, which strips any decimals off an actual number, but doesn't try to perform a conversion.
+
+Once you have some values, either numbers or strings, you'll want to compare them. Lunar comes equipped with the usual operators: `lt`, `lte`, `eq`, `neq`, `gt` and `gte` (short for "less than", "less than or equal", and so on). Additionally, `min` and `max` will return the smallest and largest, respectively, of their two arguments.
+
+Note that you can only compare numbers between them, and strings between them. (Also boolean values.) Anything else is an error, so be sure to make the appropriate conversions first. As an exception, you can check if any value is equal to `nil` or not.
+
+Comparisons always return a boolean value (`true` or `false`), which is what conditions and loops consume (see below). A number can also be used in a pinch, with 0 (zero) being false, and any other true. As a special case, `nil` counts as false, too.
+
+Truth values can be subject to logical operators `and` / `or` / `not`.
 
 Conditionals
 ------------
