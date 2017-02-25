@@ -1,4 +1,4 @@
-Differences from USB Logo
+Differences from UCB Logo
 =========================
 
 

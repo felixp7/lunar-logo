@@ -82,7 +82,7 @@ Anyway, there is more that Lunar Logo can do for you: logic, trigonometry, list 
 Data types
 ----------
 
-You've already met literal lists. Let's see how `lunar.py` parses other kinds of words:
+You've already met literal lists. Let's see how Lunar parses other kinds of words:
 
 - `true` and `false` are read as the corresponding boolean value.
 - `nil` is read as, well, the nil value (a.k.a. "null" or "None" in other languages).
@@ -129,7 +129,7 @@ To index data by something else than integer indices, especially when you don't 
 
 	make c dict [key1 value1 key2 value2 key3]
 	
-will evaluate to a dictionary with three elements, the last of them nil. (The initializer list can be empty, but it must be present -- Lunar Logo procedures and functions always take a fixed number of arguments.) Once created, you can manipulate a dictionary with the following procedures:
+will evaluate to a dictionary with three elements, the last of them nil. (The initializer list can be empty, but it must be present -- procedures and functions always take a fixed number of arguments.) Once created, you can manipulate a dictionary with the following procedures:
 
 - `put` sets a key to a new value in the given dictionary.
 - `get` retrives a value by its key from the dictionary.
@@ -156,7 +156,7 @@ Math and logic
 
 While Lunar Logo isn't really designed for math, it still allows for a decent range of calculations. For one thing, you have the binary operators `add`, `sub`, `mul` and `div` -- also `mod` (modulo, or remainder) and `pow` (raising to power). Unary operators include `minus` (yes, it's spelled out) and `abs`.
 
-On top of these basics, the language is equipped with a small selection of trigonometric operations: `pi` returns the famous constants with 15 decimals; `sqrt`, `sin`, `cos` and `hypot` do what you expect; as for `rad` and `deg`, they convert degrees to radians and the other way around.
+On top of these basics, the language is equipped with a small selection of trigonometric operations: `pi` returns the famous constant with 15 decimals; `sqrt`, `sin`, `cos` and `hypot` do what you expect; as for `rad` and `deg`, they convert degrees to radians and the other way around.
 
 But how to *get* numbers? Outside of a literal list, words that look numeric will be parsed an integer or floating point value, as appropriate (and most arithmetic operations will try to preserve the type, for performance). If you have a string though, you must run it through `parse-int` or `parse-float`, as appropriate. Contrast with `int`, which strips any decimals off an actual number, but doesn't try to perform a conversion.
 
